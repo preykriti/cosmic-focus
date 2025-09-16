@@ -1,6 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+
 
     <application
       android:name=".MainApplication"
@@ -22,6 +29,11 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+        <intent-filter>
+        <action android:name="com.cosmicfocus.OPEN_APP" />
+          <category android:name="android.intent.category.DEFAULT" />
+         </intent-filter>
       </activity>
+      <receiver android:name="com.github.wuxudong.rnbackgroundjob.RNBackgroundJobReceiver" />
     </application>
 </manifest>
