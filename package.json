@@ -26,7 +26,8 @@
     "@react-native-firebase/app": "^23.1.2",
     "@react-native-firebase/auth": "^23.1.2",
     "@react-native-firebase/firestore": "^23.1.2",
-    "@react-native-firebase/messaging": "^23.1.2"
+    "@react-native-firebase/messaging": "^23.1.2",
+    "react-native-screens": "^4.15.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
