@@ -10,6 +10,13 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed via npm
+            url("$rootDir/../node_modules/react-native/android")
+        }
+        maven {
+            url("$rootDir/../node_modules/react-native-background-timer/android")
+        }
     }
     dependencies {
         classpath("com.android.tools.build:gradle")

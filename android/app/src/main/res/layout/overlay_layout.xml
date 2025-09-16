@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/overlay_background"
+    android:gravity="center"
+    android:elevation="10dp"
+    android:padding="32dp">
+
+    <TextView
+        android:id="@+id/message_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Is this app distracting you?"
+        android:textSize="24sp"
+        android:textColor="#FFFFFF"
+        android:textAlignment="center"
+        android:layout_marginBottom="32dp"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp" />
+
+    <Button
+        android:id="@+id/return_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Return to Deep Focus"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_background"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-medium"
+        android:minWidth="200dp" />
+
+</LinearLayout>
