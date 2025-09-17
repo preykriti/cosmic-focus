@@ -12,13 +12,14 @@ import React, { useState, useEffect } from 'react';
 import { globalStyles } from '../styles/global';
 import { useAuth } from '../context/AuthContext';
 import { StarBackground } from '../components/StarBackground';
+import { useAppDispatch } from '../store/hooks';
+import { signUpUser } from '../store/slices/authSlice';
 
 
 export default function SignupScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signUp } = useAuth();
-
+  const dispatch = useAppDispatch();
   const [pulseAnim] = useState(new Animated.Value(1));
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function SignupScreen({ navigation }: any) {
 
   const handleSignup = async () => {
     try {
-      await signUp(email, password);
+      await dispatch(signUpUser({email, password})).unwrap();
       Alert.alert('Signup successful');
     } catch (error: any) {
       Alert.alert('Signup failed', error.message);

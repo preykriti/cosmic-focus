@@ -12,10 +12,12 @@ import { useAuth } from '../context/AuthContext';
 import { StarBackground } from '../components/StarBackground';
 import Ionicon from '@react-native-vector-icons/ionicons';
 import StreakHeatmap from '../components/StreakHeatmap';
-
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { logoutUser } from '../store/slices/authSlice';
 
 export default function ProfileScreen({ navigation }: any) {
-  const {user, logout} = useAuth();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
   const [pulseAnim] = useState(new Animated.Value(1));
   const [heatmapData, setHeatmapData] = useState<number[][]>([]);
 
@@ -67,7 +69,7 @@ export default function ProfileScreen({ navigation }: any) {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await dispatch(logoutUser()).unwrap();
     } catch (error: any) {
       console.log('Logout failed:', error.message);
     }
