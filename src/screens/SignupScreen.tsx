@@ -13,6 +13,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { globalStyles } from '../styles/global';
 import { useAuth } from '../context/AuthContext';
 import { Star } from '../../types';
+import { StarBackground } from '../components/StarBackground';
 
 const { width, height } = Dimensions.get('window');
 
@@ -59,14 +60,7 @@ export default function SignupScreen({ navigation }: any) {
 
   return (
     <View style={[globalStyles.container, styles.spaceContainer]}>
-      <View style={styles.starsContainer}>
-        {stars.map(star => (
-          <View
-            key={star.id}
-            style={[styles.star, { left: star.left, top: star.top }]}
-          />
-        ))}
-      </View>
+      <StarBackground count={60} />
 
       <View style={styles.signupContainer}>
         <Animated.View
