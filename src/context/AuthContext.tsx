@@ -1,9 +1,18 @@
-import { ReactNode, createContext, useContext, useEffect, useState } from "react";
-import { Text, View } from "react-native";
-import { FirebaseAuthTypes, onAuthStateChanged } from "@react-native-firebase/auth";
-import { getApp } from "@react-native-firebase/app";
-import { getAuth } from "@react-native-firebase/auth";
-import * as authService from "../services/auth";
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { Text, View } from 'react-native';
+import {
+  FirebaseAuthTypes,
+  onAuthStateChanged,
+} from '@react-native-firebase/auth';
+import { getApp } from '@react-native-firebase/app';
+import { getAuth } from '@react-native-firebase/auth';
+import * as authService from '../firebase/auth';
 
 type AuthContextType = {
   user: FirebaseAuthTypes.User | null;
@@ -17,7 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
   return ctx;
 };
 
@@ -29,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = getAuth(app);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, u => {
       setUser(u || null);
       setInitializing(false);
     });
@@ -50,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   if (initializing) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>Loading...</Text>
       </View>
     );

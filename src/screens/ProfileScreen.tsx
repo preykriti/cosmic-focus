@@ -185,12 +185,11 @@ const styles = StyleSheet.create({
   avatarCircle: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(15, 40, 90, 0.4)',
+    borderRadius: 50,backgroundColor: 'rgba(40, 50, 80, 0.4)', 
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(100, 200, 255, 0.4)',
+    borderColor: 'rgba(255,255,255,0.2)',
     marginBottom: 15,
     boxShadow: '0 0 6px rgba(0, 212, 255, 0.3)',
   },
@@ -209,21 +208,20 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
 
-  holographicPanel: {
-    width: '90%',
-    backgroundColor: 'rgba(10, 25, 60, 0.55)',
-    borderRadius: 15,
-    borderWidth: 0.5,
-    borderColor: 'rgba(0, 212, 255, 0.6)',
-    padding: 25,
-    marginBottom: 25,
-    boxShadow: `
-      0 0 10px rgba(0, 212, 255, 0.6), 
-      0 0 20px rgba(138, 43, 226, 0.4), 
-      inset 0 0 4px rgba(0, 212, 255, 0.5),
-      inset 0 0 10px rgba(138, 43, 226, 0.3)
-    `,
-  },
+holographicPanel: {
+  width: '90%',
+  backgroundColor: 'rgba(30, 40, 60, 0.6)',
+  borderRadius: 15,
+  borderWidth: 0.5,
+  borderColor: 'rgba(255, 255, 255, 0.1)',
+  padding: 25,
+  marginBottom: 25,
+  boxShadow: `
+    0 0 12px rgba(255, 255, 255, 0.08),
+    inset 0 0 6px rgba(0, 0, 0, 0.3)
+  `,
+},
+
 
   panelBorder: {
     position: 'relative',
@@ -240,38 +238,39 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  statValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#64c8ff',
-  },
+statValue: {
+  fontSize: 20,
+  fontWeight: '800',
+  color: '#c9a227',
+},
 
   statLabel: {
     fontSize: 14,
     color: '#aaa',
   },
 
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 15,
-    textAlign: 'center',
-    textShadowColor: '#64c8ff',
-    textShadowRadius: 8,
-  },
+sectionTitle: {
+  fontSize: 18,
+  fontWeight: '700',
+  color: '#fff',
+  marginBottom: 15,
+  textAlign: 'center',
+  textShadowColor: 'rgba(255,255,255,0.15)', 
+  textShadowRadius: 6,
+},
 
-  spaceButton: {
-    width: '90%',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 140, 180, 0.8)',
-    boxShadow: `
-      0 0 10px rgba(0, 212, 255, 0.7),
-      0 0 20px rgba(138, 43, 226, 0.4)
-    `,
-  },
+spaceButton: {
+  width: '90%',
+  borderRadius: 12,
+  paddingVertical: 14,
+  alignItems: 'center',
+  backgroundColor: '#2d5a88',
+  // backgroundColor: '#36b2d6',
+
+  boxShadow: `
+    0 0 8px rgba(58,124,165,0.4)
+  `,
+},
 
   spaceButtonText: {
     color: '#ffffff',

@@ -1,5 +1,10 @@
 import { getApp } from '@react-native-firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from '@react-native-firebase/auth';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+} from '@react-native-firebase/auth';
 
 const app = getApp();
 const auth = getAuth(app);
