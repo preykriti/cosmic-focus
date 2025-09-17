@@ -6,13 +6,10 @@ import FriendsScreen from "../screens/FriendsScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ReportScreen from "../screens/ReportScreen";
 import { colors } from "../constants/colors";
+import TasksScreen from "../screens/TasksScreen";
+import { TabParamList } from "../types/navigation";
 
-export type TabParamList = {
-  Home: undefined;
-  Friends: undefined;
-  Report: undefined;
-  Profile: undefined;
-};
+type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -30,7 +27,7 @@ export default function TabNavigator() {
           boxShadow: "0 4px 10px rgba(51, 180, 255, 0.3)",
         },
         tabBarIcon: ({ color, size }) => {
-          let iconName: string = "ellipse";
+          let iconName: IconName = "ellipse";
 
           switch (route.name) {
             case "Home":
@@ -45,12 +42,16 @@ export default function TabNavigator() {
             case "Report":
               iconName = "bar-chart";
               break;
+            case "Tasks":
+              iconName = "checkmark-done-circle";
+              break;
           }
 
           return <Ionicons name={iconName} color={color} size={size} />;
         },
       })}
     >
+      <Tab.Screen name="Tasks" component={TasksScreen} />
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Friends" component={FriendsScreen} />
       <Tab.Screen name="Report" component={ReportScreen} />

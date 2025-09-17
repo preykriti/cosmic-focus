@@ -15,7 +15,7 @@ import StreakHeatmap from '../components/StreakHeatmap';
 
 
 export default function ProfileScreen({ navigation }: any) {
-  const { user, logout } = useAuth();
+  const {user, logout} = useAuth();
   const [pulseAnim] = useState(new Animated.Value(1));
   const [heatmapData, setHeatmapData] = useState<number[][]>([]);
 
@@ -68,7 +68,6 @@ export default function ProfileScreen({ navigation }: any) {
   const handleLogout = async () => {
     try {
       await logout();
-      navigation.replace('Login');
     } catch (error: any) {
       console.log('Logout failed:', error.message);
     }
@@ -76,7 +75,7 @@ export default function ProfileScreen({ navigation }: any) {
 
   return (
     <View style={[globalStyles.container, styles.spaceContainer]}>
-      <StarBackground count={60} />
+      <StarBackground count={40} />
 
       <ScrollView
         contentContainerStyle={{ alignItems: 'center', paddingVertical: 40 }}
@@ -102,14 +101,14 @@ export default function ProfileScreen({ navigation }: any) {
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
                 <Text style={styles.statValue}>
-                  <Ionicon name="flame-outline" size={22} color="#ffd43b" />
+                  <Ionicon name="flame-outline" size={22} color="#d3ac20ff" />
                   12
                 </Text>
                 <Text style={styles.statLabel}>Day Streak</Text>
               </View>
               <View style={styles.statBox}>
                 <Text style={styles.statValue}>
-                  <Ionicon name="star-outline" size={22} color="#ffd43b" />
+                  <Ionicon name="star-outline" size={22} color="#d3ac20ff" />
                   340
                 </Text>
                 <Text style={styles.statLabel}>Stars</Text>
@@ -212,15 +211,15 @@ const styles = StyleSheet.create({
     width: '90%',
     backgroundColor: 'rgba(10, 25, 60, 0.55)',
     borderRadius: 15,
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: 'rgba(0, 212, 255, 0.6)',
     padding: 25,
     marginBottom: 25,
     boxShadow: `
-      0 0 12px rgba(0, 212, 255, 0.6), 
-      0 0 30px rgba(138, 43, 226, 0.4), 
-      inset 0 0 8px rgba(0, 212, 255, 0.5),
-      inset 0 0 15px rgba(138, 43, 226, 0.3)
+      0 0 10px rgba(0, 212, 255, 0.6), 
+      0 0 20px rgba(138, 43, 226, 0.4), 
+      inset 0 0 4px rgba(0, 212, 255, 0.5),
+      inset 0 0 10px rgba(138, 43, 226, 0.3)
     `,
   },
 

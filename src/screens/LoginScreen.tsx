@@ -13,24 +13,22 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { globalStyles } from '../styles/global';
 import { colors } from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
-import { Star } from '../../types';
 import { StarBackground } from '../components/StarBackground';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { AuthStackParamList } from '../types/navigation';
 
-const { width, height } = Dimensions.get('window');
+type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, "Login">;
 
-export default function LoginScreen({ navigation }: any) {
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+
+export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pulseAnim] = useState(new Animated.Value(1));
   const { login } = useAuth();
-
-  const stars: Star[] = useMemo(() => {
-    return [...Array(50)].map((_, i) => ({
-      left: Math.random() * width,
-      top: Math.random() * height,
-      id: i,
-    }));
-  }, []);
 
   useEffect(() => {
     Animated.loop(
