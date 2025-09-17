@@ -17,6 +17,7 @@
     "@react-native-firebase/messaging": "^23.1.2",
     "@react-native-vector-icons/ionicons": "^12.3.0",
     "@react-native/new-app-screen": "0.81.4",
+    "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/core": "^6.4.17",
     "@react-navigation/drawer": "^6.7.2",
     "@react-navigation/native": "^6.1.18",
