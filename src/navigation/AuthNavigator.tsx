@@ -1,9 +1,13 @@
-import React from "react";
-import { createStackNavigator, CardStyleInterpolators } from "@react-navigation/stack";
-import LoginScreen from "../screens/LoginScreen";
-import SignupScreen from "../screens/SignupScreen";
+import React from 'react';
+import {
+  createStackNavigator,
+  CardStyleInterpolators,
+} from '@react-navigation/stack';
+import LoginScreen from '../screens/LoginScreen';
+import SignupScreen from '../screens/SignupScreen';
+import { AuthStackParamList } from '../types/navigation';
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<AuthStackParamList>();
 
 export default function AuthNavigator() {
   return (
@@ -12,12 +16,12 @@ export default function AuthNavigator() {
         headerShown: false,
         transitionSpec: {
           open: {
-            animation: "timing",
+            animation: 'timing',
             config: { duration: 800 },
           },
           close: {
-            animation: "timing",
-            config: { duration: 800 }, 
+            animation: 'timing',
+            config: { duration: 800 },
           },
         },
         cardStyleInterpolator: CardStyleInterpolators.forFadeFromCenter,

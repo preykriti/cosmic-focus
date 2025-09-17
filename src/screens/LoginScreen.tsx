@@ -11,24 +11,24 @@ import {
 } from 'react-native';
 import React, { useState, useEffect, useMemo } from 'react';
 import { globalStyles } from '../styles/global';
+import { colors } from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
-import { Star } from '../../types';
+import { StarBackground } from '../components/StarBackground';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { AuthStackParamList } from '../types/navigation';
 
-const { width, height } = Dimensions.get('window');
+type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, "Login">;
 
-export default function LoginScreen({ navigation }: any) {
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+
+export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pulseAnim] = useState(new Animated.Value(1));
   const { login } = useAuth();
-
-  const stars: Star[] = useMemo(() => {
-    return [...Array(50)].map((_, i) => ({
-      left: Math.random() * width,
-      top: Math.random() * height,
-      id: i,
-    }));
-  }, []);
 
   useEffect(() => {
     Animated.loop(
@@ -59,20 +59,7 @@ export default function LoginScreen({ navigation }: any) {
   return (
     <View style={[globalStyles.container, styles.spaceContainer]}>
       {/* stars background*/}
-      <View style={styles.starsContainer}>
-        {stars.map(star => (
-          <View
-            key={star.id}
-            style={[
-              styles.star,
-              {
-                left: star.left,
-                top: star.top,
-              },
-            ]}
-          />
-        ))}
-      </View>
+      <StarBackground count={60} />
 
       <View style={styles.loginContainer}>
         {/* title */}
@@ -92,7 +79,7 @@ export default function LoginScreen({ navigation }: any) {
                 placeholder="Your email"
                 value={email}
                 onChangeText={setEmail}
-                placeholderTextColor="rgba(100, 200, 255, 0.67)"
+                placeholderTextColor={colors.placeholderPrimary}
               />
             </View>
 
@@ -103,7 +90,7 @@ export default function LoginScreen({ navigation }: any) {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                placeholderTextColor="rgba(100, 201, 255, 0.67)"
+                placeholderTextColor={colors.placeholderSecondary}
               />
             </View>
 
@@ -134,8 +121,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    // backgroundColor: '#0b0f29',
-    backgroundColor: '#111633',
+    backgroundColor: colors.backgroundDark,
   },
 
   starsContainer: {
@@ -148,7 +134,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 2,
     height: 2,
-    backgroundColor: 'white',
+    backgroundColor: colors.star,
     borderRadius: 1,
     opacity: 0.8,
   },
@@ -168,26 +154,26 @@ const styles = StyleSheet.create({
   spaceTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#ffffff',
+    color: colors.textPrimary,
     textAlign: 'center',
-    textShadowColor: '#64c8ff',
+    textShadowColor: colors.textShadow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
 
   holographicPanel: {
     width: '100%',
-    backgroundColor: 'rgba(10, 25, 60, 0.55)',
+    backgroundColor: colors.panelBackground,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 212, 255, 0.6)',
+    borderColor: colors.borderAccent,
     padding: 30,
     boxShadow: `
-    0 0 18px rgba(0, 212, 255, 0.6), 
-    0 0 30px rgba(138, 43, 226, 0.4), 
-    inset 0 0 8px rgba(0, 212, 255, 0.5),
-    inset 0 0 15px rgba(138, 43, 226, 0.3)
-  `,
+      0 0 18px ${colors.borderAccent}, 
+      0 0 30px rgba(138, 43, 226, 0.4), 
+      inset 0 0 8px ${colors.borderAccent},
+      inset 0 0 15px rgba(138, 43, 226, 0.3)
+    `,
   },
 
   panelBorder: {
@@ -200,38 +186,38 @@ const styles = StyleSheet.create({
   },
 
   spaceInput: {
-    backgroundColor: 'rgba(15, 40, 90, 0.4)',
+    backgroundColor: colors.inputBackground,
     borderWidth: 1,
-    borderColor: 'rgba(100, 200, 255, 0.4)',
+    borderColor: colors.borderInput,
     borderRadius: 10,
     padding: 15,
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     width: '100%',
     fontFamily: 'monospace',
-    boxShadow: '0 0 6px rgba(0, 212, 255, 0.3)',
+    boxShadow: `0 0 6px ${colors.borderAccent}`,
   },
 
-spaceButton: {
-  width: '100%',
-  marginTop: 20,
-  borderRadius: 12,
-  overflow: 'hidden',
-  paddingVertical: 16,
-  paddingHorizontal: 20,
-  alignItems: 'center',
-  backgroundColor: 'rgba(0, 140, 180, 0.8)',
-  boxShadow: `
-    0 0 10px rgba(0, 212, 255, 0.7),
-    0 0 20px rgba(138, 43, 226, 0.4)
-  `,
-},
+  spaceButton: {
+    width: '100%',
+    marginTop: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    backgroundColor: colors.buttonBackground,
+    boxShadow: `
+      0 0 10px ${colors.borderAccent},
+      0 0 20px rgba(138, 43, 226, 0.4)
+    `,
+  },
 
   spaceButtonText: {
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: '800',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowColor: colors.textShadowDark,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
@@ -242,7 +228,7 @@ spaceButton: {
   },
 
   signupText: {
-    color: '#64c8ff',
+    color: colors.textAccent,
     fontSize: 14,
     textAlign: 'center',
     textDecorationLine: 'underline',

@@ -7,14 +7,12 @@ import {
   TouchableOpacity,
   View,
   Animated,
-  Dimensions,
 } from 'react-native';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { globalStyles } from '../styles/global';
 import { useAuth } from '../context/AuthContext';
-import { Star } from '../../types';
+import { StarBackground } from '../components/StarBackground';
 
-const { width, height } = Dimensions.get('window');
 
 export default function SignupScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
@@ -22,14 +20,6 @@ export default function SignupScreen({ navigation }: any) {
   const { signUp } = useAuth();
 
   const [pulseAnim] = useState(new Animated.Value(1));
-
-  const stars: Star[] = useMemo(() => {
-    return [...Array(50)].map((_, i) => ({
-      left: Math.random() * width,
-      top: Math.random() * height,
-      id: i,
-    }));
-  }, []);
 
   useEffect(() => {
     Animated.loop(
@@ -59,14 +49,7 @@ export default function SignupScreen({ navigation }: any) {
 
   return (
     <View style={[globalStyles.container, styles.spaceContainer]}>
-      <View style={styles.starsContainer}>
-        {stars.map(star => (
-          <View
-            key={star.id}
-            style={[styles.star, { left: star.left, top: star.top }]}
-          />
-        ))}
-      </View>
+      <StarBackground count={60} />
 
       <View style={styles.signupContainer}>
         <Animated.View
