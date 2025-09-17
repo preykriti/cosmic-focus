@@ -11,12 +11,44 @@ import { globalStyles } from '../styles/global';
 import { useAuth } from '../context/AuthContext';
 import { StarBackground } from '../components/StarBackground';
 import Ionicon from '@react-native-vector-icons/ionicons';
+import StreakHeatmap from '../components/StreakHeatmap';
 
-export default function UserProfileScreen({ navigation }: any) {
+
+export default function ProfileScreen({ navigation }: any) {
   const { user, logout } = useAuth();
   const [pulseAnim] = useState(new Animated.Value(1));
+  const [heatmapData, setHeatmapData] = useState<number[][]>([]);
+
+  const getColor = (value: number) => {
+    switch (value) {
+      case 0:
+        return 'rgba(255,255,255,0.08)';
+      case 1:
+        return '#1a5f7a';
+      case 2:
+        return '#2081ac';
+      case 3:
+        return '#36b2d6';
+      case 4:
+        return '#64c8ff';
+      default:
+        return 'rgba(255,255,255,0.1)';
+    }
+  };
 
   useEffect(() => {
+    const weeks = 12;
+    const days = 7;
+    const data: number[][] = [];
+    for (let w = 0; w < weeks; w++) {
+      const week: number[] = [];
+      for (let d = 0; d < days; d++) {
+        week.push(Math.floor(Math.random() * 5));
+      }
+      data.push(week);
+    }
+    setHeatmapData(data);
+
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -84,6 +116,11 @@ export default function UserProfileScreen({ navigation }: any) {
               </View>
             </View>
           </View>
+        </View>
+
+        <View style={styles.holographicPanel}>
+          <Text style={styles.sectionTitle}>Focus Streak</Text>
+          <StreakHeatmap data={heatmapData} getColor={getColor} />
         </View>
 
         {/* progress overview */}
