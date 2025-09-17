@@ -8,27 +8,34 @@ import {
   View,
   Animated,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import React, { useState, useEffect, useMemo } from 'react';
 import { globalStyles } from '../styles/global';
 import { colors } from '../constants/colors';
-import { useAuth } from '../context/AuthContext';
 import { StarBackground } from '../components/StarBackground';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../types/navigation';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { loginUser } from '../store/slices/authSlice';
 
-type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, "Login">;
+type LoginScreenNavigationProp = StackNavigationProp<
+  AuthStackParamList,
+  'Login'
+>;
 
 type Props = {
   navigation: LoginScreenNavigationProp;
 };
 
-
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pulseAnim] = useState(new Animated.Value(1));
-  const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const dispatch = useAppDispatch();
+  const { error } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     Animated.loop(
@@ -48,11 +55,16 @@ export default function LoginScreen({ navigation }: Props) {
   }, []);
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      return;
+    }
+    
+    setIsLoading(true);
     try {
-      await login(email, password);
-      Alert.alert('Login successful');
-    } catch (error: any) {
-      Alert.alert('Access Denied', error.message);
+      await dispatch(loginUser({ email, password })).unwrap();
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -95,12 +107,17 @@ export default function LoginScreen({ navigation }: Props) {
             </View>
 
             {/* login button*/}
-            <TouchableOpacity
-              style={styles.spaceButton}
+             <TouchableOpacity
+              style={[styles.spaceButton, isLoading && styles.disabledButton]}
               onPress={handleLogin}
               activeOpacity={0.8}
+              disabled={isLoading || !email || !password}
             >
-              <Text style={styles.spaceButtonText}>Login</Text>
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.spaceButtonText}>Login</Text>
+              )}
             </TouchableOpacity>
 
             <Pressable
@@ -174,6 +191,9 @@ const styles = StyleSheet.create({
       inset 0 0 8px ${colors.borderAccent},
       inset 0 0 15px rgba(138, 43, 226, 0.3)
     `,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 
   panelBorder: {
