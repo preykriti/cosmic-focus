@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { globalStyles } from '../styles/global';
-import { useAuth } from '../context/AuthContext';
 import { StarBackground } from '../components/StarBackground';
 import Ionicon from '@react-native-vector-icons/ionicons';
 import StreakHeatmap from '../components/StreakHeatmap';
@@ -17,24 +16,24 @@ import { logoutUser } from '../store/slices/authSlice';
 
 export default function ProfileScreen({ navigation }: any) {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector(state => state.auth);
   const [pulseAnim] = useState(new Animated.Value(1));
   const [heatmapData, setHeatmapData] = useState<number[][]>([]);
 
   const getColor = (value: number) => {
     switch (value) {
       case 0:
-        return 'rgba(255,255,255,0.08)';
+        return 'rgba(255,255,255,0.05)';
       case 1:
-        return '#1a5f7a';
+        return 'rgba(59, 130, 246, 0.3)';
       case 2:
-        return '#2081ac';
+        return 'rgba(59, 130, 246, 0.5)';
       case 3:
-        return '#36b2d6';
+        return 'rgba(59, 130, 246, 0.7)';
       case 4:
-        return '#64c8ff';
+        return '#3b82f6';
       default:
-        return 'rgba(255,255,255,0.1)';
+        return 'rgba(255,255,255,0.05)';
     }
   };
 
@@ -91,7 +90,7 @@ export default function ProfileScreen({ navigation }: any) {
           ]}
         >
           <View style={styles.avatarCircle}>
-            <Ionicon name="planet-outline" size={50} color="#64c8ff" />
+            <Ionicon name="planet-outline" size={50} color="#94a3b8" />
           </View>
           <Text style={styles.spaceTitle}>username</Text>
           <Text style={styles.emailText}>{user?.email}</Text>
@@ -102,17 +101,17 @@ export default function ProfileScreen({ navigation }: any) {
           <View style={styles.panelBorder}>
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
-                <Text style={styles.statValue}>
-                  <Ionicon name="flame-outline" size={22} color="#d3ac20ff" />
-                  12
-                </Text>
+                <View style={styles.statValueContainer}>
+                  <Ionicon name="flame-outline" size={22} color="#f59e0b" />
+                  <Text style={styles.statNumber}>12</Text>
+                </View>
                 <Text style={styles.statLabel}>Day Streak</Text>
               </View>
               <View style={styles.statBox}>
-                <Text style={styles.statValue}>
-                  <Ionicon name="star-outline" size={22} color="#d3ac20ff" />
-                  340
-                </Text>
+                <View style={styles.statValueContainer}>
+                  <Ionicon name="star-outline" size={22} color="#f59e0b" />
+                  <Text style={styles.statNumber}>340</Text>
+                </View>
                 <Text style={styles.statLabel}>Stars</Text>
               </View>
             </View>
@@ -159,7 +158,7 @@ export default function ProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   spaceContainer: {
     flex: 1,
-    backgroundColor: '#111633',
+    backgroundColor: '#0f132cff',
   },
 
   starsContainer: {
@@ -186,42 +185,43 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(15, 40, 90, 0.4)',
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(100, 200, 255, 0.4)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
     marginBottom: 15,
-    boxShadow: '0 0 6px rgba(0, 212, 255, 0.3)',
+    boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)',
   },
+
   spaceTitle: {
     fontSize: 28,
     fontWeight: '900',
     color: '#ffffff',
     textAlign: 'center',
-    textShadowColor: '#64c8ff',
+    textShadowColor: 'rgba(96, 165, 250, 0.4)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadowRadius: 8,
   },
 
   emailText: {
     fontSize: 14,
-    color: '#ccc',
+    color: '#94a3b8',
+    marginTop: 4,
   },
 
   holographicPanel: {
-    width: '90%',
-    backgroundColor: 'rgba(10, 25, 60, 0.55)',
-    borderRadius: 15,
-    borderWidth: 0.5,
-    borderColor: 'rgba(0, 212, 255, 0.6)',
-    padding: 25,
-    marginBottom: 25,
+    width: '94%',
+    backgroundColor: 'rgba(30, 41, 59, 0.4)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.2)',
+    padding: 24,
+    marginBottom: 24,
     boxShadow: `
-      0 0 10px rgba(0, 212, 255, 0.6), 
-      0 0 20px rgba(138, 43, 226, 0.4), 
-      inset 0 0 4px rgba(0, 212, 255, 0.5),
-      inset 0 0 10px rgba(138, 43, 226, 0.3)
+      0 0 10px rgba(255, 255, 255, 0.15),
+      0 4px 4px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1)
     `,
   },
 
@@ -232,53 +232,64 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    // backgroundColor: "red"
   },
 
   statBox: {
     alignItems: 'center',
     flex: 1,
   },
-
   statValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
-    color: '#64c8ff',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+
+  statValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    gap: 8,
+  },
+
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#ffffff',
   },
 
   statLabel: {
-    fontSize: 14,
-    color: '#aaa',
+    fontSize: 13,
+    color: '#94a3b8',
+    fontWeight: '500',
   },
 
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#fff',
-    marginBottom: 15,
+    color: '#ffffff',
+    marginBottom: 16,
     textAlign: 'center',
-    textShadowColor: '#64c8ff',
-    textShadowRadius: 8,
   },
 
   spaceButton: {
-    width: '90%',
+    width: '94%',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 140, 180, 0.8)',
+    backgroundColor: '#1e3a8a',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
     boxShadow: `
-      0 0 10px rgba(0, 212, 255, 0.7),
-      0 0 20px rgba(138, 43, 226, 0.4)
+      0 4px 16px rgba(30, 64, 175, 0.25),
+      0 0 0 1px rgba(59, 130, 246, 0.1)
     `,
   },
 
   spaceButtonText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '800',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });

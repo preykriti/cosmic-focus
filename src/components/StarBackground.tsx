@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export const StarBackground = ({ count = 50 }) => {
+export const StarBackground = ({ count = 50 }:{count: number}) => {
   const stars = useMemo(
     () =>
       [...Array(count)].map((_, i) => ({

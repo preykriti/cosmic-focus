@@ -13,12 +13,18 @@ import { globalStyles } from '../styles/global';
 import { useAuth } from '../context/AuthContext';
 import { StarBackground } from '../components/StarBackground';
 import { useAppDispatch } from '../store/hooks';
-import { signUpUser } from '../store/slices/authSlice';
-
+import {
+  clearError,
+  clearMessage,
+  signUpUser,
+} from '../store/slices/authSlice';
+import Toast from '../components/Toast';
 
 export default function SignupScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+
   const dispatch = useAppDispatch();
   const [pulseAnim] = useState(new Animated.Value(1));
 
@@ -40,12 +46,25 @@ export default function SignupScreen({ navigation }: any) {
   }, []);
 
   const handleSignup = async () => {
-    try {
-      await dispatch(signUpUser({email, password})).unwrap();
-      Alert.alert('Signup successful');
-    } catch (error: any) {
-      Alert.alert('Signup failed', error.message);
+    if (!username.trim()) {
+      dispatch(clearMessage());
+      dispatch(clearError());
+      dispatch({ type: 'auth/setError', payload: 'Username cannot be empty' });
+      return;
     }
+    if (!email.trim() || !password.trim()) {
+      dispatch(clearMessage());
+      dispatch(clearError());
+      dispatch({
+        type: 'auth/setError',
+        payload: 'Email and Password cannot be empty',
+      });
+      return;
+    }
+
+    try {
+      await dispatch(signUpUser({ email, password, username })).unwrap();
+    } catch (error: any) {}
   };
 
   return (
@@ -63,6 +82,13 @@ export default function SignupScreen({ navigation }: any) {
           <View style={styles.panelBorder}>
             {/* inputs */}
             <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.spaceInput}
+                placeholder="Choose a username"
+                value={username}
+                onChangeText={setUsername}
+                placeholderTextColor="rgba(100, 200, 255, 0.67)"
+              />
               <TextInput
                 keyboardType="email-address"
                 style={styles.spaceInput}
@@ -102,6 +128,7 @@ export default function SignupScreen({ navigation }: any) {
           </View>
         </View>
       </View>
+      <Toast />
     </View>
   );
 }

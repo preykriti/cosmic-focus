@@ -1,7 +1,12 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import * as authService from "../../services/auth";
-import { AuthState, LoginCredentials, SignUpCredentials } from "../../types/redux";
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import * as authService from '../../firebase/auth';
+import * as usersService from '../../firebase/firestore/users';
+import {
+  AuthState,
+  LoginCredentials,
+  SignUpCredentials,
+} from '../../types/redux';
 
 const initialState: AuthState = {
   user: null,
@@ -12,43 +17,64 @@ const initialState: AuthState = {
 
 // async thunks
 export const loginUser = createAsyncThunk(
-  "auth/login",
+  'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       await authService.login(credentials.email, credentials.password);
-      return { message: "Login successful" };
+      return { message: 'Login successful' };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
 export const signUpUser = createAsyncThunk(
-  "auth/signUp",
-  async (credentials: SignUpCredentials, { rejectWithValue }) => {
+  'auth/signUp',
+  async (
+    credentials: SignUpCredentials & { username: string },
+    { rejectWithValue },
+  ) => {
     try {
-      await authService.signUp(credentials.email, credentials.password);
-      return { message: "Signup successful" };
+      const taken = await usersService.isUsernameTaken(credentials.username);
+      if (taken) throw new Error('Username is already taken');
+
+      const userCredential = await authService.signUp(
+        credentials.email,
+        credentials.password,
+      );
+      const userId = userCredential.user.uid;
+      await usersService.createUserProfile(
+        userId,
+        credentials.email,
+        credentials.username,
+      );
+      return {
+        message: 'Signup successful',
+        user: {
+          id: userId,
+          email: credentials.email,
+          username: credentials.username,
+        },
+      };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
 export const logoutUser = createAsyncThunk(
-  "auth/logout",
+  'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
       await authService.logout();
-      
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
 const authSlice = createSlice({
-  name: "auth",
+  name: 'auth',
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<FirebaseAuthTypes.User | null>) => {
@@ -58,14 +84,17 @@ const authSlice = createSlice({
     setInitializing: (state, action: PayloadAction<boolean>) => {
       state.initializing = action.payload;
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
-    clearMessage: (state) => {
+    clearMessage: state => {
       state.message = null;
     },
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+    },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
       .addCase(loginUser.fulfilled, (state, action) => {
         state.message = action.payload.message;
@@ -85,5 +114,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setInitializing, clearError, clearMessage } = authSlice.actions;
+export const { setUser, setInitializing, clearError, clearMessage } =
+  authSlice.actions;
 export default authSlice.reducer;

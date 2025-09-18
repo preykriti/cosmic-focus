@@ -15,4 +15,5 @@ export interface LoginCredentials {
 export interface SignUpCredentials {
   email: string;
   password: string;
+  username: string;
 }
