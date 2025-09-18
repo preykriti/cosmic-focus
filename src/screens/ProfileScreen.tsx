@@ -161,21 +161,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f132cff',
   },
 
-  starsContainer: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-  },
-
-  star: {
-    position: 'absolute',
-    width: 2,
-    height: 2,
-    backgroundColor: 'white',
-    borderRadius: 1,
-    opacity: 0.8,
-  },
-
   avatarContainer: {
     alignItems: 'center',
     marginBottom: 30,
