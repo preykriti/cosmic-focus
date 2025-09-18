@@ -1,4 +1,4 @@
-import { useAuth } from "../context/AuthContext";
+
 import { useAppSelector } from "../store/hooks";
 import AuthNavigator from "./AuthNavigator";
 import MainNavigator from "./MainNavigator";
