@@ -8,7 +8,6 @@ import {
   TextInput,
 } from 'react-native';
 import { globalStyles } from '../styles/global';
-import { StarBackground } from '../components/StarBackground';
 import Ionicon from '@react-native-vector-icons/ionicons';
 
 export default function FriendsScreen() {
@@ -31,31 +30,30 @@ export default function FriendsScreen() {
   const handleStartGroupSession = () => {};
 
   return (
-    <View style={[globalStyles.container, styles.spaceContainer]}>
-      <StarBackground count={40} />
-
+    <View style={[globalStyles.container, styles.container]}>
+      {/* search bar */}
       <View style={styles.searchContainer}>
         <Ionicon
           name="search-outline"
           size={20}
-          color="#94a3b8"
-          style={{ marginRight: 10 }}
+          color="#64748b"
+          style={{ marginRight: 8 }}
         />
         <TextInput
           style={styles.searchInput}
           placeholder="Search friends"
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#94a3b8"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
-      <ScrollView
-        contentContainerStyle={{ alignItems: 'center', paddingVertical: 20 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* your friends*/}
-        <View style={styles.holographicPanel}>
+      {/* friends card */}
+      <View style={styles.card}>
+        <ScrollView
+          contentContainerStyle={styles.friendsScrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.friendsHeader}>
             <Text style={styles.sectionTitle}>Your Friends</Text>
             <Text style={styles.friendsCount}>{friends.length} friends</Text>
@@ -64,169 +62,154 @@ export default function FriendsScreen() {
           {friends.map(friend => (
             <View key={friend.id} style={styles.friendItem}>
               <View style={styles.friendAvatar}>
-                <Ionicon name="person-outline" size={28} color="#94a3b8" />
+                <Ionicon name="person-outline" size={24} color="#3b82f6" />
               </View>
               <View style={styles.friendInfo}>
                 <Text style={styles.friendName}>{friend.name}</Text>
-                <View style={styles.streakContainer}>
-                  <Ionicon name="flame-outline" size={14} color="#f59e0b" />
-                  <Text style={styles.streakText}>{friend.streak}</Text>
+                <View style={styles.streakRow}>
+                  <View style={styles.streakContainer}>
+                    <Ionicon name="flame" size={12} color="#fff" />
+                    <Text style={styles.streakNumber}>{friend.streak}</Text>
+                  </View>
+                  {/* <Text style={styles.streakLabel}>day streak</Text> */}
                 </View>
               </View>
             </View>
           ))}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       {/* group session button */}
-      <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity
-          style={styles.spaceButton}
-          onPress={handleStartGroupSession}
-          activeOpacity={0.8}
-        >
-          <Ionicon name="people-outline" size={24} color="#ffffff" />
-          <Text style={styles.spaceButtonText}>Start Group Session</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.groupButton}
+        onPress={handleStartGroupSession}
+        activeOpacity={0.8}
+      >
+        <Ionicon name="people-outline" size={20} color="#ffffff" />
+        <Text style={styles.groupButtonText}>Start Group Session</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  spaceContainer: {
+  container: {
     flex: 1,
-    backgroundColor: '#0f132cff',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 16,
+    paddingTop: 20,
   },
-
   searchContainer: {
-    width: '94%',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
+    backgroundColor: '#fff',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.2)',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    alignSelf: 'center',
-    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    // marginBottom: 6,
   },
-
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#ffffff',
-    fontWeight: '500',
+    color: '#1e293b',
   },
-
-  holographicPanel: {
-    width: '94%',
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.2)',
-    padding: 24,
-    marginBottom: 50,
-    alignSelf: 'center',
-    boxShadow: `
-      0 0 10px rgba(255, 255, 255, 0.15),
-      0 4px 4px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    // padding: 16,
+    marginBottom: 10,
+    elevation: 2,
   },
-
+  friendsScrollContainer: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
   friendsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
   },
-
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#1e293b',
   },
-
   friendsCount: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#64748b',
     fontWeight: '500',
   },
-
   friendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(148, 163, 184, 0.1)',
+    borderBottomColor: '#e2e8f0',
   },
-
   friendAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    backgroundColor: '#f1f5f9',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.2)',
-    marginRight: 16,
+    borderColor: '#e2e8f0',
+    marginRight: 12,
   },
-
   friendInfo: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-
   friendName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
-    marginBottom: 2,
+    color: '#1e293b',
   },
-
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   streakContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#f59e0b',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    marginRight: 6,
   },
-
-  streakText: {
+  streakNumber: {
     fontSize: 12,
-    color: '#f59e0b',
-    fontWeight: '500',
+    color: '#fff',
+    fontWeight: '700',
     marginLeft: 4,
   },
-
-  bottomButtonContainer: {
-    position: 'absolute',
-    bottom: 50,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    alignItems: 'center',
+  streakLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '500',
   },
-
-  spaceButton: {
-    width: '94%',
+  groupButton: {
+    position: 'absolute',
+    bottom: 54,
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 8,
+    paddingVertical: 14,
     backgroundColor: '#1e3a8a',
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
-    boxShadow: `
-      0 4px 16px rgba(30, 64, 175, 0.25),
-      0 0 0 1px rgba(59, 130, 246, 0.1)
-    `,
   },
-
-  spaceButtonText: {
+  groupButtonText: {
     color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     marginLeft: 8,
   },
 });

@@ -20,10 +20,11 @@ export default function TabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: colors.textAccent,
         tabBarStyle: {
-          backgroundColor: colors.panelBackground,
+          backgroundColor: "rgba(10, 25, 60, 1)",
           borderTopWidth: 0,
           position: "absolute",
           paddingBottom: 10,
+          height: 50,
           boxShadow: "0 4px 10px rgba(51, 180, 255, 0.3)",
         },
         tabBarIcon: ({ color, size }) => {
