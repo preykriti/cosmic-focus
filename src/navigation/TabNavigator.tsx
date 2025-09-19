@@ -19,7 +19,7 @@ export default function TabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: colors.textAccent,
+        tabBarActiveTintColor: "#93a6daff",
         tabBarStyle: {
           backgroundColor: 'rgba(10, 25, 60, 1)',
           borderTopWidth: 0,

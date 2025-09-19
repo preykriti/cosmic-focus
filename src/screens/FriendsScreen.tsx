@@ -12,19 +12,17 @@ import Ionicon from '@react-native-vector-icons/ionicons';
 
 export default function FriendsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'friends' | 'requests'>('friends');
 
   const friends = [
-    { id: 1, name: 'Alex Johnson', streak: 15 },
-    { id: 2, name: 'Sarah Chen', streak: 8 },
-    { id: 3, name: 'Mike Rodriguez', streak: 23 },
-    { id: 4, name: 'Emma Wilson', streak: 12 },
-    { id: 5, name: 'James Brown', streak: 5 },
-    { id: 6, name: 'Lisa Davis', streak: 18 },
-    { id: 7, name: 'David Garcia', streak: 10 },
-    { id: 8, name: 'Sophia Martinez', streak: 7 },
-    { id: 9, name: 'Chris Lee', streak: 14 },
-    { id: 10, name: 'Olivia Kim', streak: 20 },
-    { id: 11, name: 'Daniel Walker', streak: 6 },
+    { id: 1, name: 'alexjohnson', streak: 15 },
+    { id: 2, name: 'sarahchen', streak: 8 },
+    { id: 3, name: 'mikerodriguez', streak: 23 },
+  ];
+
+  const friendRequests = [
+    { id: 101, name: 'newuser1' },
+    { id: 102, name: 'newuser2' },
   ];
 
   const handleStartGroupSession = () => {};
@@ -35,9 +33,9 @@ export default function FriendsScreen() {
       <View style={styles.searchContainer}>
         <Ionicon
           name="search-outline"
-          size={20}
+          size={18}
           color="#64748b"
-          style={{ marginRight: 8 }}
+          style={{ marginRight: 6 }}
         />
         <TextInput
           style={styles.searchInput}
@@ -46,48 +44,124 @@ export default function FriendsScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicon name="close-circle" size={18} color="#64748b" />
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* friends card */}
+      {/* tab navigator */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'friends' && styles.activeTab]}
+          onPress={() => setActiveTab('friends')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'friends' && styles.activeTabText,
+            ]}
+          >
+            Friends
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
+          onPress={() => setActiveTab('requests')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'requests' && styles.activeTabText,
+            ]}
+          >
+            Friend Requests
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* content */}
       <View style={styles.card}>
         <ScrollView
           contentContainerStyle={styles.friendsScrollContainer}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.friendsHeader}>
-            <Text style={styles.sectionTitle}>Your Friends</Text>
-            <Text style={styles.friendsCount}>{friends.length} friends</Text>
-          </View>
+          {activeTab === 'friends' ? (
+            <>
+              <View style={styles.friendsHeader}>
+                <Text style={styles.sectionTitle}>Your Friends</Text>
+                <Text style={styles.friendsCount}>
+                  {friends.length} friends
+                </Text>
+              </View>
 
-          {friends.map(friend => (
-            <View key={friend.id} style={styles.friendItem}>
-              <View style={styles.friendAvatar}>
-                <Ionicon name="person-outline" size={24} color="#3b82f6" />
-              </View>
-              <View style={styles.friendInfo}>
-                <Text style={styles.friendName}>{friend.name}</Text>
-                <View style={styles.streakRow}>
-                  <View style={styles.streakContainer}>
-                    <Ionicon name="flame" size={12} color="#fff" />
-                    <Text style={styles.streakNumber}>{friend.streak}</Text>
+              {friends.map(friend => (
+                <TouchableOpacity
+                  key={friend.id}
+                  style={styles.friendItem}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.friendAvatar}>
+                    <Ionicon name="person-outline" size={24} color="#1e3a8a" />
                   </View>
-                  {/* <Text style={styles.streakLabel}>day streak</Text> */}
-                </View>
+                  <View style={styles.friendInfo}>
+                    <Text style={styles.friendName}>{friend.name}</Text>
+                    <View style={styles.streakRow}>
+                      <View style={styles.streakContainer}>
+                        <Ionicon name="flame" size={12} color="#fff" />
+                        <Text style={styles.streakNumber}>{friend.streak}</Text>
+                      </View>
+                      <Text style={styles.streakLabel}>day streak</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </>
+          ) : (
+            <>
+              <View style={styles.friendsHeader}>
+                <Text style={styles.sectionTitle}>Friend Requests</Text>
+                <Text style={styles.friendsCount}>
+                  {friendRequests.length} requests
+                </Text>
               </View>
-            </View>
-          ))}
+
+              {friendRequests.map(req => (
+                <View key={req.id} style={styles.friendItem}>
+                  <View style={styles.friendAvatar}>
+                    <Ionicon name="person-outline" size={24} color="#1e3a8a" />
+                  </View>
+                  <View style={styles.friendInfo}>
+                    <Text style={styles.friendName}>{req.name}</Text>
+                    <View style={{ flexDirection: 'row' }}>
+                      <TouchableOpacity style={styles.acceptBtn}>
+                        <Ionicon name="checkmark" size={16} color="#ffffff" />
+                        {/* <Text style={styles.btnText}>Accept</Text> */}
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.declineBtn}>
+                        <Ionicon name="close" size={16} color="#ffffff" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
         </ScrollView>
       </View>
 
       {/* group session button */}
-      <TouchableOpacity
-        style={styles.groupButton}
-        onPress={handleStartGroupSession}
-        activeOpacity={0.8}
-      >
-        <Ionicon name="people-outline" size={20} color="#ffffff" />
-        <Text style={styles.groupButtonText}>Start Group Session</Text>
-      </TouchableOpacity>
+      {activeTab === 'friends' && (
+        <TouchableOpacity
+          style={styles.groupButton}
+          onPress={handleStartGroupSession}
+          activeOpacity={0.9}
+        >
+          <Ionicon name="people-outline" size={20} color="#ffffff" />
+          <Text style={styles.groupButtonText}>Start Group Session</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -102,29 +176,56 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    // marginBottom: 6,
+    marginBottom: 12,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: '#1e293b',
+    paddingVertical: 0,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: '#1e3a8a',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  activeTabText: {
+    color: '#fff',
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    // padding: 16,
     marginBottom: 10,
     elevation: 2,
+    flex: 1,
   },
   friendsScrollContainer: {
     paddingVertical: 16,
     paddingHorizontal: 16,
+    paddingBottom: 80,
   },
   friendsHeader: {
     flexDirection: 'row',
@@ -134,29 +235,29 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#1e3a8a',
   },
   friendsCount: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#64748b',
     fontWeight: '500',
   },
   friendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
   friendAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#f1f5f9',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#e0e7ff',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#c7d2fe',
     marginRight: 12,
   },
   friendInfo: {
@@ -166,9 +267,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   friendName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#0f172a',
   },
   streakRow: {
     flexDirection: 'row',
@@ -184,19 +285,19 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   streakNumber: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#fff',
-    fontWeight: '700',
-    marginLeft: 4,
+    fontWeight: '600',
+    marginLeft: 3,
   },
   streakLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#64748b',
-    fontWeight: '500',
+    fontWeight: '400',
   },
   groupButton: {
     position: 'absolute',
-    bottom: 54,
+    bottom: 40,
     left: 16,
     right: 16,
     flexDirection: 'row',
@@ -208,8 +309,26 @@ const styles = StyleSheet.create({
   },
   groupButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  acceptBtn: {
+    backgroundColor: '#1e3a8a',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  declineBtn: {
+    backgroundColor: '#d46363ff',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  btnText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
