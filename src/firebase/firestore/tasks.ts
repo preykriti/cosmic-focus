@@ -1,4 +1,17 @@
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, Timestamp } from '@react-native-firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+} from '@react-native-firebase/firestore';
 import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
 interface Task {
@@ -22,9 +35,13 @@ interface TaskInput {
 }
 
 const firestore = getFirestore();
-const tasksCollection = collection(firestore, 'tasks');
+const tasksCollection: FirebaseFirestoreTypes.CollectionReference<FirebaseFirestoreTypes.DocumentData> =
+  collection(firestore, 'tasks');
 
-export const createTask = async (userId: string, taskData: TaskInput): Promise<Task> => {
+export const createTask = async (
+  userId: string,
+  taskData: TaskInput,
+): Promise<Task> => {
   const newTaskRef = doc(tasksCollection);
   const taskWithMetadata = {
     ...taskData,
@@ -33,30 +50,40 @@ export const createTask = async (userId: string, taskData: TaskInput): Promise<T
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   };
-  
+
   await setDoc(newTaskRef, taskWithMetadata);
   return { id: newTaskRef.id, ...taskWithMetadata };
 };
 
 // fetch all tasks of a user
 export const getUserTasks = async (userId: string): Promise<Task[]> => {
-  const q = query(tasksCollection, where('userId', '==', userId), orderBy('createdAt', 'desc'));
+  const q = query(
+    tasksCollection,
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc'),
+  );
   const querySnapshot = await getDocs(q);
   const tasks: Task[] = [];
-  
-  querySnapshot.forEach((docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
-    const data = docSnap.data();
-    tasks.push({ 
-      id: docSnap.id, 
-      ...data 
-    } as Task);
-  });
-  
+
+  querySnapshot.forEach(
+    (docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
+      const data = docSnap.data();
+      tasks.push({
+        id: docSnap.id,
+        ...data,
+      } as Task);
+    },
+  );
+
   return tasks;
 };
 
 // update
-export const updateTask = async (taskId: string, userId: string, updatedData: Partial<Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>): Promise<void> => {
+export const updateTask = async (
+  taskId: string,
+  userId: string,
+  updatedData: Partial<Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>,
+): Promise<void> => {
   const taskRef = doc(tasksCollection, taskId);
   await updateDoc(taskRef, {
     ...updatedData,
@@ -65,6 +92,9 @@ export const updateTask = async (taskId: string, userId: string, updatedData: Pa
 };
 
 // delete
-export const deleteTask = async (taskId: string, userId: string): Promise<void> => {
+export const deleteTask = async (
+  taskId: string,
+  userId: string,
+): Promise<void> => {
   await deleteDoc(doc(tasksCollection, taskId));
 };

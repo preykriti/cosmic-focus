@@ -1,15 +1,16 @@
-import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import Ionicons from "@react-native-vector-icons/ionicons";
-import HomeScreen from "../screens/HomeScreen";
-import FriendsScreen from "../screens/FriendsScreen";
-import ProfileScreen from "../screens/ProfileScreen";
-import ReportScreen from "../screens/ReportScreen";
-import { colors } from "../constants/colors";
-import TasksScreen from "../screens/TasksScreen";
-import { TabParamList } from "../types/navigation";
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import HomeScreen from '../screens/HomeScreen';
+import FriendsScreen from '../screens/FriendsScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import ReportScreen from '../screens/ReportScreen';
+import { colors } from '../constants/colors';
+import TasksScreen from '../screens/TasksScreen';
+import { TabParamList } from '../types/navigation';
+import PomodoroScreen from '../screens/PomodoroScreen';
 
-type IconName = React.ComponentProps<typeof Ionicons>["name"];
+type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -20,30 +21,31 @@ export default function TabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: colors.textAccent,
         tabBarStyle: {
-          backgroundColor: colors.panelBackground,
+          backgroundColor: 'rgba(10, 25, 60, 1)',
           borderTopWidth: 0,
-          position: "absolute",
-          paddingBottom: 10,
-          boxShadow: "0 4px 10px rgba(51, 180, 255, 0.3)",
+          position: 'absolute',
+          padding: 5,
+          height: 50,
+          boxShadow: '0 4px 10px rgba(51, 180, 255, 0.3)',
         },
         tabBarIcon: ({ color, size }) => {
-          let iconName: IconName = "ellipse";
+          let iconName: IconName = 'ellipse';
 
           switch (route.name) {
-            case "Home":
-              iconName = "home";
+            case 'Home':
+              iconName = 'home';
               break;
-            case "Friends":
-              iconName = "people";
+            case 'Friends':
+              iconName = 'people';
               break;
-            case "Profile":
-              iconName = "person";
+            case 'Profile':
+              iconName = 'person';
               break;
-            case "Report":
-              iconName = "bar-chart";
+            case 'Report':
+              iconName = 'bar-chart';
               break;
-            case "Tasks":
-              iconName = "checkmark-done-circle";
+            case 'Tasks':
+              iconName = 'checkmark-done-circle';
               break;
           }
 
@@ -56,6 +58,7 @@ export default function TabNavigator() {
       <Tab.Screen name="Friends" component={FriendsScreen} />
       <Tab.Screen name="Report" component={ReportScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Pomodoro" component={PomodoroScreen} />
     </Tab.Navigator>
   );
 }
