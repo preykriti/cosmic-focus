@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Task } from '../../types/task';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 type TaskCardProps = {
   task: Task;
@@ -15,11 +16,11 @@ export default function TaskCard({ task, onPress }: TaskCardProps) {
       case 'study':
         return '#3b82f6';
       case 'work':
-        return '#bd3636ff';
+        return '#bd4040ff';
       case 'sleep':
         return '#8b5cf6';
       case 'workout':
-        return '#127709ff';
+        return '#18990cff';
       default:
         return '#64748b';
     }
@@ -40,7 +41,7 @@ export default function TaskCard({ task, onPress }: TaskCardProps) {
             styles.tag,
             {
               borderColor: getTagColor(task.tag),
-              backgroundColor: `${getTagColor(task.tag)}15`, // faint bg
+              backgroundColor: `${getTagColor(task.tag)}15`,
             },
           ]}
         >
@@ -80,6 +81,12 @@ export default function TaskCard({ task, onPress }: TaskCardProps) {
             },
           ]}
         />
+      </View>
+      <View>
+        <TouchableOpacity onPress={onPress} style={styles.startButton} >
+          <Ionicons name='play-outline' size={16} color="#ffffff" />
+          <Text style = {styles.startButtonText}>Start</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -152,4 +159,18 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 3,
   },
+  startButton:{
+    backgroundColor: '#1e3b8aff',
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginTop: 16,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    elevation: 5,
+  },
+  startButtonText:{
+    color: '#ffffff',
+    fontSize: 14,
+  }
 });
