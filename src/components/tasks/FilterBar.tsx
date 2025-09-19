@@ -12,7 +12,7 @@ type FilterBarProps = {
   onSelect: (tag: string) => void;
 };
 
-const filters = ['all', 'study', 'work', 'sleep','other'];
+const filters = ['all', 'study', 'work', 'sleep', 'other'];
 
 export default function FilterBar({ selected, onSelect }: FilterBarProps) {
   return (
@@ -41,44 +41,31 @@ export default function FilterBar({ selected, onSelect }: FilterBarProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: 20,
-    paddingHorizontal: 10, 
+    marginBottom: 16,
   },
   container: {
-    paddingHorizontal: 6,
-    paddingVertical: 10,
+    paddingHorizontal: 4,
   },
   filter: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginHorizontal: 6,
     borderRadius: 20,
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
+    backgroundColor: '#f1f5f9',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.25)',
-    boxShadow: `
-      0 0 6px rgba(255, 255, 255, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06)
-    `,
+    borderColor: '#e2e8f0',
   },
   active: {
-    backgroundColor: 'rgba(59, 130, 246, 0.25)',
-    borderColor: 'rgba(59, 130, 246, 0.7)',
-    boxShadow: `
-      0 0 10px rgba(59, 130, 246, 0.6),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
+    backgroundColor: '#dbeafe',
+    borderColor: '#3b82f6',
   },
   text: {
-    color: '#cbd5e1',
+    color: '#475569',
     fontWeight: '600',
     textTransform: 'capitalize',
     fontSize: 14,
   },
   activeText: {
-    color: '#3b82f6',
-    textShadowColor: 'rgba(59, 130, 246, 0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
+    color: '#1e3a8a',
   },
 });

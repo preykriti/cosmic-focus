@@ -9,11 +9,9 @@ import {
   ScrollView,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../store';
+import { useAppDispatch } from '../../store/hooks';
 import { addTask } from '../../store/slices/taskSlice';
 import firestore from '@react-native-firebase/firestore';
-import { useAppDispatch } from '../../store/hooks';
 
 type TaskModalProps = {
   visible: boolean;
@@ -82,15 +80,14 @@ export default function TaskModal({
           <TextInput
             style={styles.input}
             placeholder="Title"
-            placeholderTextColor="#888"
+            placeholderTextColor="#94a3b8"
             value={title}
             onChangeText={setTitle}
           />
-
           <TextInput
             style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
             placeholder="Description"
-            placeholderTextColor="#888"
+            placeholderTextColor="#94a3b8"
             value={description}
             onChangeText={setDescription}
             multiline
@@ -106,7 +103,7 @@ export default function TaskModal({
             value={allocatedHours}
             onValueChange={setAllocatedHours}
             minimumTrackTintColor="#3b82f6"
-            maximumTrackTintColor="#8b7878ff"
+            maximumTrackTintColor="#e2e8f0"
             thumbTintColor="#3b82f6"
           />
 
@@ -123,7 +120,11 @@ export default function TaskModal({
                 style={[styles.tag, tag === t && styles.selectedTag]}
                 onPress={() => setTag(t)}
               >
-                <Text style={styles.tagText}>{t}</Text>
+                <Text
+                  style={[styles.tagText, tag === t && { color: '#3b82f6' }]}
+                >
+                  {t}
+                </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -141,7 +142,7 @@ export default function TaskModal({
               <TextInput
                 style={[styles.input, { flex: 1, marginBottom: 0 }]}
                 placeholder="Tag name"
-                placeholderTextColor="#888"
+                placeholderTextColor="#94a3b8"
                 value={newTag}
                 onChangeText={setNewTag}
                 autoFocus
@@ -164,14 +165,20 @@ export default function TaskModal({
             </View>
           )}
 
+          {/* buttons */}
           <View style={styles.row}>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: '#555' }]}
+              style={[styles.button, { backgroundColor: '#e2e8f0' }]}
               onPress={onClose}
             >
-              <Text style={styles.buttonText}>Cancel</Text>
+              <Text style={[styles.buttonText, { color: '#1e293b' }]}>
+                Cancel
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={handleAdd}>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#3b82f6' }]}
+              onPress={handleAdd}
+            >
               <Text style={styles.buttonText}>Add</Text>
             </TouchableOpacity>
           </View>
@@ -184,133 +191,102 @@ export default function TaskModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   modal: {
     width: '90%',
-    backgroundColor: 'rgba(30, 41, 59, 0.95)',
-    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.2)',
+    borderColor: '#e2e8f0',
     padding: 20,
-    boxShadow: `
-      0 0 12px rgba(255, 255, 255, 0.08),
-      0 4px 8px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05)
-    `,
   },
-
   title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
     textAlign: 'center',
-    marginBottom: 18,
-    textShadowColor: 'rgba(96, 165, 250, 0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
+    marginBottom: 16,
   },
-
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: '#f8fafc',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.15)',
+    borderColor: '#e2e8f0',
     padding: 12,
     marginBottom: 14,
-    color: '#ffffff',
+    color: '#1e293b',
     fontSize: 15,
   },
-
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3b82f6',
+    color: '#475569',
     marginBottom: 8,
   },
-
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
   },
-
   button: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: '#1e3a8a',
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
     marginHorizontal: 6,
-    boxShadow: `
-      0 4px 16px rgba(30, 64, 175, 0.25),
-      0 0 0 1px rgba(59, 130, 246, 0.1)
-    `,
   },
-
   buttonText: {
-    color: '#ffffff',
-    fontWeight: '700',
+    color: '#fff',
+    fontWeight: '600',
     fontSize: 15,
   },
-
   tag: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    marginRight: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+    marginRight: 8,
   },
-
   selectedTag: {
     borderColor: '#3b82f6',
-    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
-
   tagText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+    textTransform: 'capitalize',
   },
-
   addTagTrigger: {
     alignSelf: 'flex-start',
     marginBottom: 15,
   },
-
   addTagTriggerText: {
     fontSize: 14,
     fontWeight: '500',
     color: '#3b82f6',
   },
-
   addTagContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
     gap: 8,
   },
-
   addTagButton: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#3b82f6',
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
   },
-
   cancelButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#e2e8f0',
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 14,

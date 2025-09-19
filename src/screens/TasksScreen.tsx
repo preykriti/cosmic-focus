@@ -10,7 +10,6 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { fetchTasks } from '../store/slices/taskSlice';
-import { StarBackground } from '../components/StarBackground';
 import Ionicon from '@react-native-vector-icons/ionicons';
 import TaskModal from '../components/tasks/TaskModal';
 import FilterBar from '../components/tasks/FilterBar';
@@ -38,33 +37,35 @@ export default function TasksScreen() {
 
   return (
     <View style={styles.container}>
-      <StarBackground count={40} />
-
-      <Text style={styles.header}>Your Tasks</Text>
+      {/* Filter bar */}
       <FilterBar selected={filter} onSelect={setFilter} />
 
-      {loading ? (
-        <ActivityIndicator color="#1e3a8a" size="large" />
-      ) : error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : (
-        <FlatList
-          data={filteredTasks}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => <TaskCard task={item} onPress={() => {}} />}
-          contentContainerStyle={{ paddingBottom: 120 }}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-      <View>
-        <TouchableOpacity
-          style={styles.addTaskButton}
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Ionicon name="add" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      {/* Task card */}
+        {loading ? (
+          <ActivityIndicator color="#1e3a8a" size="large" />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : (
+          <FlatList
+            data={filteredTasks}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <TaskCard task={item} onPress={() => {}} />
+            )}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+
+      {/* Add Task Button */}
+      <TouchableOpacity
+        style={styles.addTaskButton}
+        onPress={() => setModalVisible(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicon name="add" size={22} color="#fff" />
+        <Text style={styles.addTaskText}>Add Task</Text>
+      </TouchableOpacity>
 
       <TaskModal
         visible={modalVisible}
@@ -76,32 +77,41 @@ export default function TasksScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#111633', padding: 20 },
-  header: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 20,
-    textShadowColor: '#64c8ff',
-    textShadowRadius: 10,
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 90,
+  },
+  card: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    marginBottom: 10,
+    elevation: 2,
+  },
+  listContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   errorText: { color: 'red', textAlign: 'center', marginVertical: 10 },
   addTaskButton: {
     position: 'absolute',
-    bottom: 50,
-    right: 30,
+    bottom: 54,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    paddingVertical: 14,
     backgroundColor: '#1e3a8a',
-    padding: 16,
-    borderRadius: 50,
-    // boxShadow: `
-    //   0 0 12px rgba(229, 235, 236, 0.6),
-    //   0 0 25px rgba(138,43,226,0.4)
-    // `,
   },
-  taskButtonWrapper:{
-    position: 'absolute',
-    bottom: 50,
-    right: 30,
-  }
+  addTaskText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
 });

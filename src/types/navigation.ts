@@ -13,4 +13,5 @@ export type TabParamList = {
   Report: undefined;
   Profile: undefined;
   Tasks: undefined;
+  Pomodoro: undefined;
 };
