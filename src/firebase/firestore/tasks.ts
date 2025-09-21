@@ -16,10 +16,13 @@ import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 interface Task {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   tag: string;
-  allocatedHours: number;
-  hoursDone: number;
+  priority: 'low' | 'medium' | 'high';
+  pomodoroLength: 25 | 50;
+  breakLength: 5 | 10;
+  plannedPomodoros: number;
+  completedPomodoros: number;
   userId: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -27,10 +30,13 @@ interface Task {
 
 interface TaskInput {
   title: string;
-  description: string;
+  description?: string;
   tag: string;
-  allocatedHours: number;
-  hoursDone?: number;
+  priority: 'low' | 'medium' | 'high';
+  pomodoroLength: 25 | 50;
+  breakLength: 5 | 10;
+  plannedPomodoros: number;
+  completedPomodoros?: number;
 }
 
 const firestore = getFirestore();
@@ -44,7 +50,7 @@ export const createTask = async (
   const newTaskRef = doc(tasksCollection);
   const taskWithMetadata = {
     ...taskData,
-    hoursDone: taskData.hoursDone || 0,
+    completedPomodoros: taskData.completedPomodoros || 0,
     userId,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
