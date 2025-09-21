@@ -6,6 +6,7 @@ import {
   AuthState,
   LoginCredentials,
   SignUpCredentials,
+  UserProfile,
 } from '../../types/redux';
 
 const initialState: AuthState = {
@@ -16,51 +17,65 @@ const initialState: AuthState = {
 };
 
 // async thunks
-export const loginUser = createAsyncThunk(
-  'auth/login',
-  async (credentials: LoginCredentials, { rejectWithValue }) => {
-    try {
-      await authService.login(credentials.email, credentials.password);
-      return { message: 'Login successful' };
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  },
-);
+export const loginUser = createAsyncThunk<
+  { message: string; user: UserProfile },
+  LoginCredentials,
+  { rejectValue: string }
+>('auth/login', async (credentials, { rejectWithValue }) => {
+  try {
+    const userCredential = await authService.login(
+      credentials.email,
+      credentials.password,
+    );
+    const userId = userCredential.user.uid;
+    const profile = await usersService.getUserProfile(userId);
 
-export const signUpUser = createAsyncThunk(
-  'auth/signUp',
-  async (
-    credentials: SignUpCredentials & { username: string },
-    { rejectWithValue },
-  ) => {
-    try {
-      const taken = await usersService.isUsernameTaken(credentials.username);
-      if (taken) throw new Error('Username is already taken');
-
-      const userCredential = await authService.signUp(
-        credentials.email,
-        credentials.password,
-      );
-      const userId = userCredential.user.uid;
-      await usersService.createUserProfile(
-        userId,
-        credentials.email,
-        credentials.username,
-      );
-      return {
-        message: 'Signup successful',
-        user: {
-          id: userId,
-          email: credentials.email,
-          username: credentials.username,
-        },
-      };
-    } catch (error: any) {
-      return rejectWithValue(error.message);
+    if (!profile) {
+      throw new Error('User profile not found');
     }
-  },
-);
+
+    return {
+      message: 'Login successful',
+      user: profile as UserProfile,
+    };
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
+export const signUpUser = createAsyncThunk<
+  { message: string; user: UserProfile },
+  SignUpCredentials & { username: string },
+  { rejectValue: string }
+>('auth/signUp', async (credentials, { rejectWithValue }) => {
+  try {
+    const taken = await usersService.isUsernameTaken(credentials.username);
+    if (taken) throw new Error('Username is already taken');
+
+    const userCredential = await authService.signUp(
+      credentials.email,
+      credentials.password,
+    );
+    const userId = userCredential.user.uid;
+
+    await usersService.createUserProfile(
+      userId,
+      credentials.email,
+      credentials.username,
+    );
+
+    return {
+      message: 'Signup successful',
+      user: {
+        id: userId,
+        email: credentials.email,
+        username: credentials.username,
+      },
+    };
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
 
 export const logoutUser = createAsyncThunk(
   'auth/logout',
@@ -77,7 +92,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<FirebaseAuthTypes.User | null>) => {
+    setUser: (state, action: PayloadAction<UserProfile | null>) => {
       state.user = action.payload;
       state.initializing = false;
     },
@@ -98,12 +113,14 @@ const authSlice = createSlice({
     builder
       .addCase(loginUser.fulfilled, (state, action) => {
         state.message = action.payload.message;
+        state.user = action.payload.user;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.error = action.payload as string;
       })
       .addCase(signUpUser.fulfilled, (state, action) => {
         state.message = action.payload.message;
+        state.user = action.payload.user;
       })
       .addCase(signUpUser.rejected, (state, action) => {
         state.error = action.payload as string;

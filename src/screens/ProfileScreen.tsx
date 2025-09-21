@@ -66,7 +66,7 @@ export default function ProfileScreen({ navigation }: any) {
         <View style={styles.avatarCircle}>
           <Ionicon name="person-outline" size={40} color="#3b82f6" />
         </View>
-        <Text style={styles.username}>{'username'}</Text>
+        <Text style={styles.username}>{user?.username || 'username'}</Text>
         <Text style={styles.emailText}>{user?.email}</Text>
       </View>
 
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontWeight: '500',
   },
-  
+
   logoutButton: {
     width: '100%',
     flexDirection: 'row',

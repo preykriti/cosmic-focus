@@ -1,7 +1,8 @@
-import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { Timestamp } from '@react-native-firebase/firestore';
 
 export interface AuthState {
-  user: FirebaseAuthTypes.User | null;
+  user: UserProfile | null;
   initializing: boolean;
   error: string | null;
   message: string | null;
@@ -17,3 +18,12 @@ export interface SignUpCredentials {
   password: string;
   username: string;
 }
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  username: string;
+  stars?: number;
+  streak?: number;
+  createdAt?: Timestamp | null;
+};

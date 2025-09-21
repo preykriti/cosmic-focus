@@ -3,7 +3,6 @@ import {
   collection,
   doc,
   setDoc,
-  getDoc,
   getDocs,
   updateDoc,
   deleteDoc,
@@ -57,6 +56,9 @@ export const createTask = async (
 
 // fetch all tasks of a user
 export const getUserTasks = async (userId: string): Promise<Task[]> => {
+  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    throw new Error('Invalid userId provided');
+  }
   const q = query(
     tasksCollection,
     where('userId', '==', userId),

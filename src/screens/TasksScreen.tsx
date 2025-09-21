@@ -7,28 +7,24 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store';
 import { fetchTasks } from '../store/slices/taskSlice';
 import Ionicon from '@react-native-vector-icons/ionicons';
 import TaskModal from '../components/tasks/TaskModal';
 import FilterBar from '../components/tasks/FilterBar';
-import { useAppSelector } from '../store/hooks';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 import TaskCard from '../components/tasks/TaskCard';
 
 export default function TasksScreen() {
   const { user } = useAppSelector(state => state.auth);
-  const dispatch = useDispatch<AppDispatch>();
-  const { tasks, loading, error } = useSelector(
-    (state: RootState) => state.tasks,
-  );
+  const dispatch = useAppDispatch();
+  const { tasks, loading, error } = useAppSelector(state => state.tasks);
 
   const [filter, setFilter] = useState('all');
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
-    if (user?.uid) {
-      dispatch(fetchTasks(user.uid));
+    if (user?.id) {
+      dispatch(fetchTasks(user.id));
     }
   }, [user, dispatch]);
 
@@ -41,21 +37,19 @@ export default function TasksScreen() {
       <FilterBar selected={filter} onSelect={setFilter} />
 
       {/* Task card */}
-        {loading ? (
-          <ActivityIndicator color="#1e3a8a" size="large" />
-        ) : error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : (
-          <FlatList
-            data={filteredTasks}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <TaskCard task={item} onPress={() => {}} />
-            )}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
+      {loading ? (
+        <ActivityIndicator color="#1e3a8a" size="large" />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
+        <FlatList
+          data={filteredTasks}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => <TaskCard task={item} onPress={() => {}} />}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       {/* Add Task Button */}
       <TouchableOpacity
@@ -70,7 +64,7 @@ export default function TasksScreen() {
       <TaskModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        userId={user?.uid || ''}
+        userId={user?.id || ''}
       />
     </View>
   );
