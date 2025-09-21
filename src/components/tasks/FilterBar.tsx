@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { colors } from '../../constants/colors';
 
 type FilterBarProps = {
   selected: string;
@@ -51,21 +52,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginHorizontal: 6,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.light.surface,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.light.border,
   },
   active: {
-    backgroundColor: '#dbeafe',
-    borderColor: '#3b82f6',
+    backgroundColor: `${colors.light.primary}15`,
+    borderColor: colors.light.primary,
   },
   text: {
-    color: '#475569',
+    color: colors.light.textSecondary,
     fontWeight: '600',
     textTransform: 'capitalize',
     fontSize: 14,
   },
   activeText: {
-    color: '#1e3a8a',
+    color: colors.light.primary,
   },
 });

@@ -13,6 +13,7 @@ import TaskModal from '../components/tasks/TaskModal';
 import FilterBar from '../components/tasks/FilterBar';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import TaskCard from '../components/tasks/TaskCard';
+import { colors } from '../constants/colors';
 
 export default function TasksScreen() {
   const { user } = useAppSelector(state => state.auth);
@@ -33,12 +34,26 @@ export default function TasksScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Your tasks</Text>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicon name="add" size={20} color={colors.white} />
+        </TouchableOpacity>
+      </View>
+
       {/* Filter bar */}
       <FilterBar selected={filter} onSelect={setFilter} />
 
-      {/* Task card */}
+      {/* Task list */}
       {loading ? (
-        <ActivityIndicator color="#1e3a8a" size="large" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.light.primary} />
+        </View>
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
@@ -50,16 +65,6 @@ export default function TasksScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-
-      {/* Add Task Button */}
-      <TouchableOpacity
-        style={styles.addTaskButton}
-        onPress={() => setModalVisible(true)}
-        activeOpacity={0.8}
-      >
-        <Ionicon name="add" size={22} color="#fff" />
-        <Text style={styles.addTaskText}>Add Task</Text>
-      </TouchableOpacity>
 
       <TaskModal
         visible={modalVisible}
@@ -73,39 +78,44 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.light.surface,
     paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 90,
+    paddingTop: 12,
   },
-  card: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    marginBottom: 10,
-    elevation: 2,
-  },
-  listContainer: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-  },
-  errorText: { color: 'red', textAlign: 'center', marginVertical: 10 },
-  addTaskButton: {
-    position: 'absolute',
-    bottom: 54,
-    left: 16,
-    right: 16,
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.light.text,
+  },
+  addButton: {
+    backgroundColor: colors.light.primary,
+    borderRadius: 12,
+    padding: 12,
+    elevation: 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
-    paddingVertical: 14,
-    backgroundColor: '#1e3a8a',
   },
-  addTaskText: {
-    color: '#ffffff',
+  errorText: {
+    color: colors.light.error,
+    textAlign: 'center',
+    marginVertical: 20,
     fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+  },
+  listContainer: {
+    paddingBottom: 20,
   },
 });
