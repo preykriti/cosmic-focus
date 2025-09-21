@@ -135,8 +135,8 @@ export default function TaskModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <KeyboardAvoidingView style={styles.overlay}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <KeyboardAvoidingView style={styles.overlay}  behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View
           style={[
             styles.scrollContainer,

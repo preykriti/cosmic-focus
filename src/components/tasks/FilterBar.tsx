@@ -21,6 +21,7 @@ export default function FilterBar({ selected, onSelect }: FilterBarProps) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.container}
       >
         {filters.map(f => (

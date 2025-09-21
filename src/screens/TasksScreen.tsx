@@ -14,14 +14,30 @@ import FilterBar from '../components/tasks/FilterBar';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import TaskCard from '../components/tasks/TaskCard';
 import { colors } from '../constants/colors';
+import { useNavigation } from '@react-navigation/core';
 
 export default function TasksScreen() {
   const { user } = useAppSelector(state => state.auth);
   const dispatch = useAppDispatch();
   const { tasks, loading, error } = useAppSelector(state => state.tasks);
+  const navigation: any = useNavigation();
 
   const [filter, setFilter] = useState('all');
   const [modalVisible, setModalVisible] = useState(false);
+
+  const handleStartPomodoro = (task: any, autoStart: boolean) => {
+    navigation.navigate('PomodoroScreen', {
+      task: {
+        id: task.id,
+        title: task.title,
+        tag: task.tag,
+        pomodoroLength: task.pomodoroLength,
+        breakLength: task.breakLength,
+        plannedPomodoros: task.plannedPomodoros,
+      },
+      autoStartNext: autoStart,
+    });
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -60,7 +76,9 @@ export default function TasksScreen() {
         <FlatList
           data={filteredTasks}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => <TaskCard task={item} onPress={() => {}} />}
+          renderItem={({ item }) => (
+            <TaskCard task={item} onPress={() =>{console.log('card pressed')}} onStartPomodoro={handleStartPomodoro} />
+          )}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
         />

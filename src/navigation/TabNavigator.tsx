@@ -1,32 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import HomeScreen from '../screens/HomeScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ReportScreen from '../screens/ReportScreen';
-import { colors } from '../constants/colors';
 import TasksScreen from '../screens/TasksScreen';
-import { TabParamList } from '../types/navigation';
 import PomodoroScreen from '../screens/PomodoroScreen';
+import { colors } from '../constants/colors';
+import { TabParamList } from '../types/navigation';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
-
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function TabNavigator() {
+  const [theme] = useState<'light' | 'dark'>('light');
+  const themeColors = colors[theme];
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#93a6daff",
+        tabBarActiveTintColor: themeColors.primary,
+        tabBarInactiveTintColor: themeColors.textSecondary,
         tabBarStyle: {
-          backgroundColor: 'rgba(10, 25, 60, 1)',
-          borderTopWidth: 0,
+          backgroundColor: themeColors.card,
+          borderTopColor: themeColors.border,
+          borderTopWidth: 1,
           position: 'absolute',
           padding: 5,
-          height: 50,
-          boxShadow: '0 4px 10px rgba(51, 180, 255, 0.3)',
+          height: 55,
+          elevation: 4,
         },
         tabBarIcon: ({ color, size }) => {
           let iconName: IconName = 'ellipse';
@@ -58,7 +62,6 @@ export default function TabNavigator() {
       <Tab.Screen name="Friends" component={FriendsScreen} />
       <Tab.Screen name="Report" component={ReportScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Pomodoro" component={PomodoroScreen} />
     </Tab.Navigator>
   );
 }

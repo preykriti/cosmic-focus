@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../constants/colors';
+import AutoStartModal from '../focusSession/AutoStartModal';
 
 interface Task {
   id: string;
@@ -22,9 +23,15 @@ interface Task {
 type TaskCardProps = {
   task: Task;
   onPress: () => void;
+  onStartPomodoro?: (task: Task, autoStart: boolean) => void;
 };
 
-export default function TaskCard({ task, onPress }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  onPress,
+  onStartPomodoro,
+}: TaskCardProps) {
+  const [showAutoStartModal, setShowAutoStartModal] = useState(false);
   const progress = task.completedPomodoros / task.plannedPomodoros;
 
   const getPriorityColor = (priority: 'low' | 'medium' | 'high') => {
@@ -56,96 +63,115 @@ export default function TaskCard({ task, onPress }: TaskCardProps) {
         return { bg: '#F1F5F9', text: '#64748B', border: '#CBD5E1' };
     }
   };
+  const handleStartPress = () => {
+    setShowAutoStartModal(true);
+  };
+
+  const handleAutoStartChoice = (autoStart: boolean) => {
+    setShowAutoStartModal(false);
+    if (onStartPomodoro) {
+      onStartPomodoro(task, autoStart);
+    }
+  };
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onPress}
-      activeOpacity={0.85}
-    >
-      {/* priority color strip */}
-      <View
-        style={[
-          styles.priorityStrip,
-          { backgroundColor: getPriorityColor(task.priority) },
-        ]}
-      />
+    <>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={onPress}
+        activeOpacity={0.85}
+      >
+        {/* priority color strip */}
+        <View
+          style={[
+            styles.priorityStrip,
+            { backgroundColor: getPriorityColor(task.priority) },
+          ]}
+        />
 
-      <View style={styles.contentContainer}>
-        <View style={styles.header}>
-          <Text style={styles.title} numberOfLines={1}>
-            {task.title}
-          </Text>
-          <View
-            style={[
-              styles.tag,
-              {
-                backgroundColor: getTagColor(task.tag).bg,
-                borderColor: getTagColor(task.tag).border,
-              },
-            ]}
-          >
-            <Text
+        <View style={styles.contentContainer}>
+          <View style={styles.header}>
+            <Text style={styles.title} numberOfLines={1}>
+              {task.title}
+            </Text>
+            <View
               style={[
-                styles.tagText,
+                styles.tag,
                 {
-                  color: getTagColor(task.tag).text,
+                  backgroundColor: getTagColor(task.tag).bg,
+                  borderColor: getTagColor(task.tag).border,
                 },
               ]}
             >
-              {task.tag}
-            </Text>
-          </View>
-        </View>
-
-        {/* description */}
-        {task.description ? (
-          <Text style={styles.description} numberOfLines={2}>
-            {task.description}
-          </Text>
-        ) : null}
-
-        {/* pomodoro info */}
-        <View style={styles.infoRow}>
-          <View style={styles.infoBadge}>
-            <Text style={styles.infoText}>
-              {task.pomodoroLength}/{task.breakLength}
-            </Text>
+              <Text
+                style={[
+                  styles.tagText,
+                  {
+                    color: getTagColor(task.tag).text,
+                  },
+                ]}
+              >
+                {task.tag}
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>
-              {task.completedPomodoros}/{task.plannedPomodoros}
+          {/* description */}
+          {task.description ? (
+            <Text style={styles.description} numberOfLines={2}>
+              {task.description}
             </Text>
+          ) : null}
+
+          {/* pomodoro info */}
+          <View style={styles.infoRow}>
+            <View style={styles.infoBadge}>
+              <Text style={styles.infoText}>
+                {task.pomodoroLength}/{task.breakLength}
+              </Text>
+            </View>
+
+            <View style={styles.progressContainer}>
+              <Text style={styles.progressText}>
+                {task.completedPomodoros}/{task.plannedPomodoros}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.progressBarBackground}>
-          <View
-            style={[
-              styles.progressBarFill,
-              {
-                width: `${
-                  isNaN(progress) ? 0 : Math.min(100, progress * 100)
-                }%`,
-              },
-            ]}
-          />
+          <View style={styles.progressBarBackground}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${
+                    isNaN(progress) ? 0 : Math.min(100, progress * 100)
+                  }%`,
+                },
+              ]}
+            />
+          </View>
+          {/* start button */}
+          <TouchableOpacity onPress={handleStartPress} activeOpacity={0.8}>
+            <LinearGradient
+              colors={[colors.light.gradientStart, colors.light.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.startButton}
+            >
+              <Ionicons name="play" size={16} color={colors.white} />
+              <Text style={styles.startButtonText}>Start</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-          <LinearGradient
-            colors={[colors.light.gradientStart, colors.light.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.startButton}
-          >
-            <Ionicons name="play" size={16} color={colors.white} />
-            <Text style={styles.startButtonText}>Start</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+      {/* autostart*/}
+      <AutoStartModal
+        visible={showAutoStartModal}
+        onClose={() => setShowAutoStartModal(false)}
+        onConfirm={handleAutoStartChoice}
+        taskTitle={task.title}
+      />
+    </>
   );
 }
 

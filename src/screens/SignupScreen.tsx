@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { globalStyles } from '../styles/global';
-import { useAuth } from '../context/AuthContext';
 import { StarBackground } from '../components/StarBackground';
 import { useAppDispatch } from '../store/hooks';
 import {
@@ -88,6 +87,7 @@ export default function SignupScreen({ navigation }: any) {
                 value={username}
                 onChangeText={setUsername}
                 placeholderTextColor="rgba(100, 200, 255, 0.67)"
+                autoCapitalize='none'
               />
               <TextInput
                 keyboardType="email-address"
@@ -96,6 +96,7 @@ export default function SignupScreen({ navigation }: any) {
                 value={email}
                 onChangeText={setEmail}
                 placeholderTextColor="rgba(100, 200, 255, 0.67)"
+                autoCapitalize='none'
               />
             </View>
 
