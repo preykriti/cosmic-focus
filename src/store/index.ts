@@ -11,15 +11,16 @@ export const store = configureStore({
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [
-          'auth/setUser',
-          'tasks/fetchTasks/fulfilled',
-          'tasks/addTask/fulfilled',
-          'tasks/editTask/fulfilled',
-        ],
-        ignoredPaths: ['auth.user', 'tasks.tasks', 'friends.friends'],
-      },
+      // serializableCheck: {
+      //   ignoredActions: [
+      //     'auth/setUser',
+      //     'tasks/fetchTasks/fulfilled',
+      //     'tasks/addTask/fulfilled',
+      //     'tasks/editTask/fulfilled',
+      //   ],
+      //   ignoredPaths: ['auth.user', 'tasks.tasks', 'friends.friends'],
+      // },
+      serializableCheck: false,
     }),
 });
 

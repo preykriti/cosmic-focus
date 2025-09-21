@@ -2,10 +2,13 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import * as friendsService from '../../firebase/firestore/friends';
 import * as usersService from '../../firebase/firestore/users';
 import { Timestamp } from '@react-native-firebase/firestore';
+import { resetAllState } from '../actions';
+import { RootState } from '..';
 
 type FriendRequest = {
   id: string;
   from: string;
+  fromUsername: string;
   to: string;
   status: 'pending' | 'accepted' | 'declined';
   createdAt: Timestamp | null;
@@ -50,7 +53,14 @@ export const fetchIncomingRequests = createAsyncThunk(
 
 export const fetchFriends = createAsyncThunk(
   'friends/fetchFriends',
-  async (userId: string) => {
+  async (userId: string, { getState }) => {
+    const state = getState() as RootState;
+
+    // no refetching if already loaded
+    if (state.friends.friends.length > 0) {
+      return state.friends.friends;
+    }
+
     return await friendsService.getFriendsWithProfiles(userId);
   },
 );
@@ -109,7 +119,12 @@ export const searchUsersByUsername = createAsyncThunk(
 const friendsSlice = createSlice({
   name: 'friends',
   initialState,
-  reducers: {},
+  reducers: {
+    clearSearchResults: state => {
+      state.searchResults = [];
+      state.error = null;
+    },
+  },
   extraReducers: builder => {
     builder
       .addCase(fetchIncomingRequests.pending, state => {
@@ -123,7 +138,6 @@ const friendsSlice = createSlice({
       .addCase(fetchFriends.fulfilled, (state, action) => {
         state.friends = action.payload as FriendProfile[];
       })
-      .addCase(sendRequest.fulfilled, (state, action) => {})
       .addCase(acceptRequest.fulfilled, (state, action) => {
         state.incoming = state.incoming.filter(r => r.id !== action.payload);
       })
@@ -133,6 +147,7 @@ const friendsSlice = createSlice({
       .addCase(searchUsersByUsername.pending, state => {
         state.loading = true;
         state.error = null;
+        state.searchResults = [];
       })
       .addCase(searchUsersByUsername.fulfilled, (state, action) => {
         state.loading = false;
@@ -141,8 +156,11 @@ const friendsSlice = createSlice({
       .addCase(searchUsersByUsername.rejected, (state, action) => {
         state.loading = false;
         state.error = (action.payload as string) || 'Search failed';
-      });
+        state.searchResults = [];
+      })
+      .addCase(resetAllState, () => initialState);
   },
 });
 
+export const { clearSearchResults } = friendsSlice.actions;
 export default friendsSlice.reducer;

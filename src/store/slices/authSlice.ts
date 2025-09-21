@@ -8,6 +8,7 @@ import {
   SignUpCredentials,
   UserProfile,
 } from '../../types/redux';
+import { resetAllState } from '../actions';
 
 const initialState: AuthState = {
   user: null,
@@ -77,11 +78,12 @@ export const signUpUser = createAsyncThunk<
   }
 });
 
-export const logoutUser = createAsyncThunk(
+export const logoutUser = createAsyncThunk<void, void, { rejectValue: string }>(
   'auth/logout',
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, rejectWithValue }) => {
     try {
       await authService.logout();
+      dispatch(resetAllState());
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -127,7 +129,8 @@ const authSlice = createSlice({
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.error = action.payload as string;
-      });
+      })
+      .addCase(resetAllState, () => initialState);
   },
 });
 

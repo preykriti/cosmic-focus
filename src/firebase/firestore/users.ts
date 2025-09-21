@@ -10,6 +10,7 @@ import {
   FirebaseFirestoreTypes,
   serverTimestamp,
   orderBy,
+  Timestamp,
 } from '@react-native-firebase/firestore';
 import { UserProfile } from '../../types/redux';
 
@@ -34,7 +35,7 @@ export const createUserProfile = async (
     username,
     stars: 0,
     streak: 0,
-    createdAt: serverTimestamp(),
+    createdAt: Timestamp.now(),
   });
 };
 
