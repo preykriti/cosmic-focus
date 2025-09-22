@@ -1,23 +1,21 @@
+import React, { useState } from 'react';
 import {
-  Alert,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Animated,
-  Dimensions,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
-import React, { useState, useEffect, useMemo } from 'react';
-import { globalStyles } from '../styles/global';
-import { colors } from '../constants/colors';
-import { StarBackground } from '../components/StarBackground';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { AuthStackParamList } from '../types/navigation';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loginUser } from '../store/slices/authSlice';
+import { colors } from '../constants/colors';
+import LinearGradient from 'react-native-linear-gradient';
+import { BlurView } from '@react-native-community/blur';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { AuthStackParamList } from '../types/navigation';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   AuthStackParamList,
@@ -31,226 +29,224 @@ type Props = {
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [pulseAnim] = useState(new Animated.Value(1));
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useAppDispatch();
   const { error } = useAppSelector(state => state.auth);
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  }, []);
+  const theme = colors.light;
+  const styles = createStyles(theme);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      return;
-    }
-    
+    if (!email || !password) return;
+
     setIsLoading(true);
     try {
       await dispatch(loginUser({ email, password })).unwrap();
-    } catch (error) {
+    } catch (e) {
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <View style={[globalStyles.container, styles.spaceContainer]}>
-      {/* stars background*/}
-      <StarBackground count={60} />
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#7b6cdfff', '#6659b4ff']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientBackground}
+      >
+        <BlurView
+          style={styles.absolute}
+          blurType="light"
+          blurAmount={1}
+          reducedTransparencyFallbackColor={theme.background}
+        />
 
-      <View style={styles.loginContainer}>
-        {/* title */}
-        <Animated.View
-          style={[styles.titleContainer, { transform: [{ scale: pulseAnim }] }]}
-        >
-          <Text style={styles.spaceTitle}>Cosmic Focus</Text>
-        </Animated.View>
+        {/* main card */}
+        <View style={styles.formWrapper}>
+          <Animated.View style={styles.titleContainer}>
+            <Text style={styles.spaceTitle}>Welcome Back</Text>
+          </Animated.View>
 
-        <View style={styles.holographicPanel}>
-          <View style={styles.panelBorder}>
-            {/* inputs*/}
-            <View style={styles.inputContainer}>
-              <TextInput
-                keyboardType="email-address"
-                style={styles.spaceInput}
-                placeholder="Your email"
-                value={email}
-                onChangeText={setEmail}
-                placeholderTextColor={colors.placeholderPrimary}
+          {/* email */}
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="mail-outline"
+              size={20}
+              color={theme.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              keyboardType="email-address"
+              style={styles.input}
+              placeholder="Your email"
+              value={email}
+              onChangeText={setEmail}
+              placeholderTextColor={theme.textSecondary}
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* password */}
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color={theme.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="Your password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              placeholderTextColor={theme.textSecondary}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                size={20}
+                color={theme.textSecondary}
               />
-            </View>
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.spaceInput}
-                placeholder="Your password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                placeholderTextColor={colors.placeholderSecondary}
-              />
-            </View>
-
-            {/* login button*/}
-             <TouchableOpacity
-              style={[styles.spaceButton, isLoading && styles.disabledButton]}
-              onPress={handleLogin}
-              activeOpacity={0.8}
-              disabled={isLoading || !email || !password}
+          {/* Login Button */}
+          <TouchableOpacity
+            style={[styles.loginButton, isLoading && { opacity: 0.6 }]}
+            onPress={handleLogin}
+            activeOpacity={0.9}
+            disabled={isLoading}
+          >
+            <LinearGradient
+              colors={[theme.gradientStart, theme.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.loginButtonGradient}
             >
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.spaceButtonText}>Login</Text>
+                <Text style={styles.loginButtonText}>Login</Text>
               )}
+            </LinearGradient>
+          </TouchableOpacity>
+          <View style={styles.signupRedirect}>
+            <Text style={styles.noAccountText}>Don’t have an account?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+              <Text style={styles.redirectText}>Sign Up</Text>
             </TouchableOpacity>
-
-            <Pressable
-              onPress={() => navigation.navigate('Signup')}
-              style={styles.signupContainer}
-            >
-              <Text style={styles.signupText}>Go to signup</Text>
-            </Pressable>
           </View>
         </View>
-      </View>
+      </LinearGradient>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  spaceContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    backgroundColor: colors.backgroundDark,
-  },
-
-  starsContainer: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-  },
-
-  star: {
-    position: 'absolute',
-    width: 2,
-    height: 2,
-    backgroundColor: colors.star,
-    borderRadius: 1,
-    opacity: 0.8,
-  },
-
-  loginContainer: {
-    width: '90%',
-    maxWidth: 400,
-    alignItems: 'center',
-  },
-
-  titleContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-    position: 'relative',
-  },
-
-  spaceTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: colors.textPrimary,
-    textAlign: 'center',
-    textShadowColor: colors.textShadow,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-
-  holographicPanel: {
-    width: '100%',
-    backgroundColor: colors.panelBackground,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.borderAccent,
-    padding: 30,
-    boxShadow: `
-      0 0 18px ${colors.borderAccent}, 
-      0 0 30px rgba(138, 43, 226, 0.4), 
-      inset 0 0 8px ${colors.borderAccent},
-      inset 0 0 15px rgba(138, 43, 226, 0.3)
-    `,
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-
-  panelBorder: {
-    position: 'relative',
-  },
-
-  inputContainer: {
-    marginBottom: 25,
-    position: 'relative',
-  },
-
-  spaceInput: {
-    backgroundColor: colors.inputBackground,
-    borderWidth: 1,
-    borderColor: colors.borderInput,
-    borderRadius: 10,
-    padding: 15,
-    fontSize: 16,
-    color: colors.textPrimary,
-    width: '100%',
-    fontFamily: 'monospace',
-    boxShadow: `0 0 6px ${colors.borderAccent}`,
-  },
-
-  spaceButton: {
-    width: '100%',
-    marginTop: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    backgroundColor: colors.buttonBackground,
-    boxShadow: `
-      0 0 10px ${colors.borderAccent},
-      0 0 20px rgba(138, 43, 226, 0.4)
-    `,
-  },
-
-  spaceButtonText: {
-    color: colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
-    textShadowColor: colors.textShadowDark,
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-
-  signupContainer: {
-    marginTop: 25,
-    alignItems: 'center',
-  },
-
-  signupText: {
-    color: colors.textAccent,
-    fontSize: 14,
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-});
+const createStyles = (theme: typeof colors.light | typeof colors.dark) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'relative',
+      backgroundColor: theme.background,
+    },
+    gradientBackground: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    absolute: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    spaceTitle: {
+      fontSize: 30,
+      fontWeight: '700',
+      color: theme.primary,
+      textAlign: 'center',
+    },
+    titleContainer: {
+      alignItems: 'center',
+      marginBottom: 30,
+    },
+    formWrapper: {
+      width: '100%',
+      height: '100%',
+      justifyContent: 'center',
+      backgroundColor: theme.background,
+      paddingHorizontal: 24,
+      paddingVertical: 30,
+      borderRadius: 12,
+      boxShadow: `0 4px 6px ${theme.text}40`,
+    },
+    inputContainer: {
+      position: 'relative',
+      marginBottom: 16,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      paddingLeft: 48,
+      fontSize: 15,
+      color: theme.text,
+    },
+    passwordInput: {
+      paddingRight: 48,
+    },
+    inputIcon: {
+      position: 'absolute',
+      left: 16,
+      top: 17,
+      zIndex: 1,
+    },
+    eyeIcon: {
+      position: 'absolute',
+      right: 16,
+      top: 14,
+      padding: 4,
+      zIndex: 1,
+    },
+    loginButton: {
+      borderRadius: 12,
+      marginTop: 8,
+      marginBottom: 30,
+      elevation: 5,
+    },
+    loginButtonGradient: {
+      paddingVertical: 16,
+      paddingHorizontal: 30,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    loginButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    signupRedirect: {
+      alignItems: 'center',
+    },
+    noAccountText: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      marginBottom: 4,
+    },
+    redirectText: {
+      color: theme.primary,
+      fontSize: 16,
+      fontWeight: '600',
+      textDecorationLine: 'underline',
+    },
+  });
