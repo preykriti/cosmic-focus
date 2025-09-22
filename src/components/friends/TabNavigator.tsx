@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { colors } from '../../constants/colors';
 
 interface TabNavigatorProps {
   activeTab: 'friends' | 'requests';
@@ -28,11 +29,11 @@ export const TabNavigator: React.FC<TabNavigatorProps> = ({
         >
           Friends
         </Text>
-        {friendsCount > 0 && (
+        {/* {friendsCount > 0 && (
           <View style={styles.tabBadge}>
             <Text style={styles.tabBadgeText}>{friendsCount}</Text>
           </View>
-        )}
+        )} */}
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
@@ -73,21 +74,21 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   activeTab: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: colors.light.primary,
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#334155',
+    color: colors.light.textSecondary,
   },
   activeTabText: {
-    color: '#fff',
+    color: colors.white,
   },
   tabBadge: {
     position: 'absolute',
     top: 4,
     right: 8,
-    backgroundColor: '#ef4444',
+    backgroundColor: colors.light.error,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabBadgeText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 10,
     fontWeight: '600',
   },

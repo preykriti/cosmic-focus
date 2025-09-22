@@ -19,4 +19,5 @@ export type TabParamList = {
   Report: undefined;
   Profile: undefined;
   Tasks: undefined;
+  Feed: undefined;
 };

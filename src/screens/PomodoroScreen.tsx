@@ -341,7 +341,7 @@ export default function PomodoroScreen() {
             styles.orbitCircle,
             { backgroundColor: getSessionColor() },
             {
-              transform: [{ rotate: orbitRotation }, { translateY: -110 }],
+              transform: [{ rotate: orbitRotation }, { translateY: -106 }],
             },
           ]}
         />
@@ -387,7 +387,6 @@ export default function PomodoroScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="checkmark-done-outline" size={20} color="#fff" />
-            <Text style={styles.controlText}>Dev Complete</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -481,9 +480,9 @@ const styles = StyleSheet.create({
     color: colors.light.text,
   },
   orbitCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     position: 'absolute',
   },
   controlsContainer: {

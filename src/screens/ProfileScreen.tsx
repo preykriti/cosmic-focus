@@ -3,7 +3,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
   Dimensions,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
@@ -12,6 +11,8 @@ import Ionicon from '@react-native-vector-icons/ionicons';
 import StreakHeatmap from '../components/StreakHeatmap';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logoutUser } from '../store/slices/authSlice';
+import { colors } from '../constants/colors';
+import LinearGradient from 'react-native-linear-gradient';
 
 const { height } = Dimensions.get('window');
 
@@ -23,17 +24,17 @@ export default function ProfileScreen({ navigation }: any) {
   const getColor = (value: number) => {
     switch (value) {
       case 0:
-        return '#e5e7eb';
+        return colors.light.border;
       case 1:
-        return '#93c5fd';
+        return '#E0E7FF';
       case 2:
-        return '#60a5fa';
+        return '#A5B4FC';
       case 3:
-        return '#3b82f6';
+        return '#6366F1';
       case 4:
-        return '#1d4ed8';
+        return '#4F46E5';
       default:
-        return '#e5e7eb';
+        return colors.light.border;
     }
   };
 
@@ -64,7 +65,11 @@ export default function ProfileScreen({ navigation }: any) {
       {/* user info */}
       <View style={styles.avatarContainer}>
         <View style={styles.avatarCircle}>
-          <Ionicon name="person-outline" size={40} color="#3b82f6" />
+          <Ionicon
+            name="person-outline"
+            size={40}
+            color={colors.light.primary}
+          />
         </View>
         <Text style={styles.username}>{user?.username || 'username'}</Text>
         <Text style={styles.emailText}>{user?.email}</Text>
@@ -75,7 +80,11 @@ export default function ProfileScreen({ navigation }: any) {
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicon name="flame-outline" size={20} color="#f59e0b" />
+              <Ionicon
+                name="flame-outline"
+                size={20}
+                color={colors.light.warning}
+              />
             </View>
             <Text style={styles.statNumber}>12</Text>
             <Text style={styles.statLabel}>Day Streak</Text>
@@ -83,7 +92,11 @@ export default function ProfileScreen({ navigation }: any) {
 
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicon name="star-outline" size={20} color="#f59e0b" />
+              <Ionicon
+                name="star-outline"
+                size={20}
+                color={colors.light.warning}
+              />
             </View>
             <Text style={styles.statNumber}>340</Text>
             <Text style={styles.statLabel}>Stars</Text>
@@ -91,7 +104,11 @@ export default function ProfileScreen({ navigation }: any) {
 
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Ionicon name="time-outline" size={20} color="#f59e0b" />
+              <Ionicon
+                name="time-outline"
+                size={20}
+                color={colors.light.warning}
+              />
             </View>
             <Text style={styles.statNumber}>42h</Text>
             <Text style={styles.statLabel}>Focus Hours</Text>
@@ -99,7 +116,7 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
       </View>
 
-      {/* streak*/}
+      {/* streak + progress */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Focus Streak</Text>
         <StreakHeatmap data={heatmapData} getColor={getColor} />
@@ -117,14 +134,21 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
       </View>
 
-      {/* logout */}
+      {/* logout button */}
       <TouchableOpacity
-        style={styles.logoutButton}
+        style={styles.logoutButtonWrapper}
         onPress={handleLogout}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
       >
-        <Ionicon name="log-out-outline" size={18} color="#ffffff" />
-        <Text style={styles.logoutText}>Logout</Text>
+        <LinearGradient
+          colors={[colors.light.gradientStart, colors.light.gradientEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.logoutButton}
+        >
+          <Ionicon name="log-out-outline" size={18} color={colors.white} />
+          <Text style={styles.logoutText}>Logout</Text>
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -133,7 +157,7 @@ export default function ProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.light.surface,
     paddingVertical: 24,
     paddingHorizontal: 16,
     justifyContent: 'space-between',
@@ -147,26 +171,26 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 40,
-    backgroundColor: '#fff',
+    backgroundColor: colors.light.card,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.light.border,
     marginBottom: 10,
     elevation: 2,
   },
   username: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1e293b',
+    color: colors.light.text,
     marginBottom: 1,
   },
   emailText: {
     fontSize: 14,
-    color: '#64748b',
+    color: colors.light.textSecondary,
   },
   statsContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.light.card,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
@@ -184,7 +208,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.light.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,
@@ -192,28 +216,26 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1e293b',
+    color: colors.light.text,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#64748b',
+    color: colors.light.textSecondary,
     fontWeight: '500',
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.light.card,
     borderRadius: 14,
     padding: 14,
     marginBottom: 16,
     elevation: 2,
   },
   sectionTitle: {
-    justifyContent: 'center',
-    alignItems: 'center',
     alignSelf: 'center',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    color: colors.light.text,
     marginBottom: 16,
   },
   progressStat: {
@@ -223,15 +245,19 @@ const styles = StyleSheet.create({
   progressNumber: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#3b82f6',
+    color: colors.light.primary,
     marginBottom: 2,
   },
   progressLabel: {
     fontSize: 12,
-    color: '#64748b',
+    color: colors.light.textSecondary,
     fontWeight: '500',
   },
-
+  logoutButtonWrapper: {
+    marginBottom: 40,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
   logoutButton: {
     width: '100%',
     flexDirection: 'row',
@@ -239,20 +265,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
-    backgroundColor: '#1e3a8a',
-    // marginTop: 16,
-    marginBottom: 40,
   },
   logoutText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
   },
   separator: {
     height: 1,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: colors.light.border,
     marginVertical: 12,
   },
 });
