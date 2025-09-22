@@ -25,5 +25,11 @@ export type UserProfile = {
   username: string;
   stars?: number;
   streak?: number;
+  deadStars?: number;
+  blackholes?: number;
+  lastPomodoroDate?: Timestamp | null;
+  totalFocusMinutes?: number;
+  totalTasksDone?: number;
+  totalPomodoros?: number;
   createdAt?: Timestamp | null;
 };

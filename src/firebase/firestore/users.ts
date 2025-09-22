@@ -35,6 +35,12 @@ export const createUserProfile = async (
     username,
     stars: 0,
     streak: 0,
+    deadStars: 0,
+    blackholes: 0,
+    lastPomodoroDate: null, //for daily streak
+    totalFocusMinutes: 0,
+    totalTasksDone: 0,
+    totalPomodoros: 0,
     createdAt: Timestamp.now(),
   });
 };
@@ -51,6 +57,12 @@ export const getUserProfile = async (userId: string) => {
     username: data?.username ?? '',
     stars: data?.stars ?? 0,
     streak: data?.streak ?? 0,
+    deadStars: data?.deadStars ?? 0,
+    blackholes: data?.blackholes ?? 0,
+    lastPomodoroDate: data?.lastPomodoroDate ?? null,
+    totalFocusMinutes: data?.totalFocusMinutes ?? 0,
+    totalTasksDone: data?.totalTasksDone ?? 0,
+    totalPomodoros: data?.totalPomodoros ?? 0,
     createdAt: data?.createdAt ?? null,
   };
 
