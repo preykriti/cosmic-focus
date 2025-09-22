@@ -1,3 +1,5 @@
+import { Task } from "./task";
+
 export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
@@ -5,6 +7,10 @@ export type AuthStackParamList = {
 
 export type MainStackParamList = {
   MainTabs: undefined;
+  Pomodoro: {
+    task: Task;
+    autoStartNext: boolean;
+  };
 };
 
 export type TabParamList = {
@@ -13,5 +19,4 @@ export type TabParamList = {
   Report: undefined;
   Profile: undefined;
   Tasks: undefined;
-  Pomodoro: undefined;
 };

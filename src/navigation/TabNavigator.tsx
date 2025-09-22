@@ -6,7 +6,6 @@ import FriendsScreen from '../screens/FriendsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ReportScreen from '../screens/ReportScreen';
 import TasksScreen from '../screens/TasksScreen';
-import PomodoroScreen from '../screens/PomodoroScreen';
 import { colors } from '../constants/colors';
 import { TabParamList } from '../types/navigation';
 

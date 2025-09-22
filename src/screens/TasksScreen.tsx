@@ -26,7 +26,7 @@ export default function TasksScreen() {
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleStartPomodoro = (task: any, autoStart: boolean) => {
-    navigation.navigate('PomodoroScreen', {
+    navigation.navigate('Pomodoro', {
       task: {
         id: task.id,
         title: task.title,
@@ -77,7 +77,13 @@ export default function TasksScreen() {
           data={filteredTasks}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <TaskCard task={item} onPress={() =>{console.log('card pressed')}} onStartPomodoro={handleStartPomodoro} />
+            <TaskCard
+              task={item}
+              onPress={() => {
+                console.log('card pressed');
+              }}
+              onStartPomodoro={handleStartPomodoro}
+            />
           )}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}

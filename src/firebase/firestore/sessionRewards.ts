@@ -58,7 +58,7 @@ export const updateDeadStarsAndBlackHoles = async (
 
 //for successful pomodoro completion
 export const updateUserStatsForCompletion = async (
-  transaction: any,
+  _transaction: any,
   userId: string,
   sessionType: string,
   duration: number,
@@ -70,7 +70,7 @@ export const updateUserStatsForCompletion = async (
   const focusMinutes = Math.floor(duration / 60);
 
   const userRef = doc(firestore, 'users', userId);
-  transaction.update(userRef, {
+  await updateDoc(userRef, {
     stars: increment(starsEarned),
     totalFocusMinutes: increment(focusMinutes),
     totalPomodoros: increment(1),
@@ -79,7 +79,7 @@ export const updateUserStatsForCompletion = async (
 
   if (taskId) {
     const taskRef = doc(firestore, 'tasks', taskId);
-    transaction.update(taskRef, {
+    await updateDoc(taskRef, {
       completedPomodoros: increment(1),
       updatedAt: Timestamp.now(),
     });
@@ -87,7 +87,7 @@ export const updateUserStatsForCompletion = async (
 };
 
 export const applyAbandonmentPenalty = async (
-  transaction: any,
+  _transaction: any,
   userId: string,
   sessionType: string,
   duration: number,
@@ -95,12 +95,14 @@ export const applyAbandonmentPenalty = async (
   const deadStarsToAdd = calculateDeadStars(sessionType, duration);
   if (deadStarsToAdd > 0) {
     const userRef = doc(firestore, 'users', userId);
-    await updateDeadStarsAndBlackHoles(transaction, userRef, deadStarsToAdd);
+    await updateDoc(userRef, {
+      deadStars: increment(deadStarsToAdd),
+    });
   }
 };
 
 export const applyGroupPenalties = async (
-  transaction: any,
+  _transaction: any,
   affectedParticipants: string[],
   quitterId: string,
   sessionType: string,
@@ -109,8 +111,10 @@ export const applyGroupPenalties = async (
 ): Promise<void> => {
   for (const participantId of affectedParticipants) {
     const userRef = doc(firestore, 'users', participantId);
-    await updateDeadStarsAndBlackHoles(transaction, userRef, penaltyAmount);
+    await updateDoc(userRef, {
+      deadStars: increment(penaltyAmount),
+    });
   }
 
-  await applyAbandonmentPenalty(transaction, quitterId, sessionType, duration);
+  await applyAbandonmentPenalty(null, quitterId, sessionType, duration);
 };
