@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { globalStyles } from '../styles/global';
 import { SearchBar } from '../components/friends/SearchBar';
@@ -31,6 +31,19 @@ export default function FriendsScreen() {
     isUserFriend,
     getFriendStreak,
   } = useFriendsLogic();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+
+    try {
+      await handleSearch(searchQuery);
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [handleSearch, searchQuery]);
 
   const renderSearchResults = () => (
     <>
