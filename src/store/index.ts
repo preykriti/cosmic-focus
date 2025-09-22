@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import taskReducer from './slices/taskSlice';
 import friendsReducer from './slices/friendsSlice';
 import focusSessionReducer from './slices/focusSessionSlice';
+import feedReducer from './slices/feedSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     tasks: taskReducer,
     friends: friendsReducer,
     focusSession: focusSessionReducer,
+    feeds: feedReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({

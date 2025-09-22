@@ -14,17 +14,17 @@ export default function AuthNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        transitionSpec: {
-          open: {
-            animation: 'timing',
-            config: { duration: 800 },
-          },
-          close: {
-            animation: 'timing',
-            config: { duration: 800 },
-          },
-        },
-        cardStyleInterpolator: CardStyleInterpolators.forFadeFromCenter,
+        // transitionSpec: {
+        //   open: {
+        //     animation: 'timing',
+        //     config: { duration: 800 },
+        //   },
+        //   close: {
+        //     animation: 'timing',
+        //     config: { duration: 800 },
+        //   },
+        // },
+        // cardStyleInterpolator: CardStyleInterpolators.forFadeFromCenter,
       }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors } from '../../constants/colors';
 
 interface SectionHeaderProps {
   title: string;
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1e3a8a',
+    color: colors.light.text,
   },
   friendsCount: {
     fontSize: 13,
