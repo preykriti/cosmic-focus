@@ -39,6 +39,7 @@ export const createUserProfile = async (
     blackholes: 0,
     lastPomodoroDate: null, //for daily streak
     totalFocusMinutes: 0,
+    purchases: [],
     totalTasksDone: 0,
     totalPomodoros: 0,
     fcmToken: null,
@@ -65,6 +66,7 @@ export const getUserProfile = async (userId: string) => {
     totalTasksDone: data?.totalTasksDone ?? 0,
     totalPomodoros: data?.totalPomodoros ?? 0,
     createdAt: data?.createdAt ?? null,
+    purchases: data?.purchases ?? [],
   };
 
   return profile;

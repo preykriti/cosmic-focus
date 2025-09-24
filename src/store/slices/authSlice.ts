@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import * as authService from '../../firebase/auth';
 import * as usersService from '../../firebase/firestore/users';
+import { completeSession } from './focusSessionSlice';
 import {
   AuthState,
   LoginCredentials,
@@ -39,6 +40,21 @@ export const loginUser = createAsyncThunk<
       message: 'Login successful',
       user: profile as UserProfile,
     };
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
+export const getUser = createAsyncThunk<
+  UserProfile,
+  { userId: string },
+  { rejectValue: string }
+>('auth/getUser', async ({ userId }, { rejectWithValue }) => {
+  console.log('calling update user');
+  try {
+    console.log('updating user1', userId);
+    const updatedProfile = await usersService.getUserProfile(userId);
+    return updatedProfile as UserProfile;
   } catch (error: any) {
     return rejectWithValue(error.message);
   }
@@ -90,6 +106,21 @@ export const logoutUser = createAsyncThunk<void, void, { rejectValue: string }>(
   },
 );
 
+export const updateUser = createAsyncThunk<
+  UserProfile,
+  { userId: string; data: Partial<UserProfile> },
+  { rejectValue: string }
+>('auth/updateUser', async ({ userId, data }, { rejectWithValue }) => {
+  try {
+    console.log('updating user1', data);
+    await usersService.updateUserProfile(userId, data);
+    const updatedProfile = await usersService.getUserProfile(userId);
+    return updatedProfile as UserProfile;
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -130,7 +161,19 @@ const authSlice = createSlice({
       .addCase(logoutUser.rejected, (state, action) => {
         state.error = action.payload as string;
       })
-      .addCase(resetAllState, () => initialState);
+      .addCase(resetAllState, () => initialState)
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      .addCase(getUser.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
+      .addCase(getUser.rejected, (state, action) => {
+        state.error = action.payload as string;
+      });
   },
 });
 
