@@ -62,6 +62,7 @@ export default function PomodoroScreen() {
 
   const user = useAppSelector(state => state.auth.user);
 
+  // Move all useState and useRef hooks to the top, before any conditional logic
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionType, setSessionType] = useState<
     'pomodoro' | 'shortBreak' | 'longBreak'
@@ -76,60 +77,215 @@ export default function PomodoroScreen() {
   >([]);
   const [groupSession, setGroupSession] =
     useState<focusSessionService.FocusSession | null>(null);
-  const [isLoading, setIsLoading] = useState(isGroupSession && groupSessionId ? true : false);
+  const [isLoading, setIsLoading] = useState(
+    isGroupSession && groupSessionId ? true : false,
+  );
+  const [time, setTime] = useState(25 * 60);
 
-  // determine the task to use
+  // All refs must also be declared before any conditional logic
+  const timerRef = useRef<number | null>(null);
+  const orbitAnim = useRef(new Animated.Value(0)).current;
+  const autoStartTimeoutRef = useRef<number | null>(null);
+
+  // Determine the task to use - moved to after hooks
   const getSessionTask = () => {
     if (isGroupSession) {
-      return null; 
+      return null;
     }
-    
     return routeTask || null;
   };
 
   const sessionTask = getSessionTask();
+  const pomodoroLength = isGroupSession
+    ? 25
+    : sessionTask?.pomodoroLength ?? 25;
+  const breakLength = isGroupSession ? 5 : sessionTask?.breakLength ?? 5;
+  const plannedPomodoros = isGroupSession
+    ? 4
+    : sessionTask?.plannedPomodoros ?? 4;
 
+  // ALL useEffect hooks must be declared before any conditional returns
+  
+  // Group session listener - consolidated into one useEffect
   useEffect(() => {
-    if (!isGroupSession && !sessionTask) {
-      console.error('No task available for solo session');
-      Alert.alert(
-        'Error', 
-        'No task selected for this session.',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
-    }
-  }, [sessionTask, navigation, isGroupSession]);
+    if (!isGroupSession || !groupSessionId) return;
 
+    console.log('Setting up group session listener for:', groupSessionId);
+    const sessionRef = doc(getFirestore(), 'focusSessions', groupSessionId);
+
+    const unsubscribe = onSnapshot(
+      sessionRef,
+      doc => {
+        console.log('Group session snapshot received:', doc.exists());
+
+        if (!doc.exists()) {
+          console.error('Group session not found');
+          Alert.alert('Error', 'Session not found', [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ]);
+          return;
+        }
+
+        const sessionData = doc.data() as focusSessionService.FocusSession;
+        console.log('Group session data:', {
+          sessionStatus: sessionData.sessionStatus,
+          status: sessionData.status,
+          duration: sessionData.duration,
+          startTime: sessionData.startTime,
+        });
+
+        setGroupSession(sessionData);
+        setIsLoading(false);
+
+        // Handle active session - start the timer
+        if (
+          sessionData.sessionStatus === 'active' &&
+          sessionData.status === 'active'
+        ) {
+          console.log('Session is active, starting timer...');
+
+          const sessionDuration = sessionData.duration || 25 * 60;
+
+          if (!isRunning) {
+            if (sessionData.startTime) {
+              const startTime = sessionData.startTime.toDate().getTime();
+              const elapsed = Math.floor((Date.now() - startTime) / 1000);
+              const remaining = Math.max(0, sessionDuration - elapsed);
+
+              console.log('Timer sync:', {
+                startTime,
+                elapsed,
+                remaining,
+                sessionDuration,
+              });
+              setTime(remaining);
+            } else {
+              setTime(sessionDuration);
+            }
+            setIsRunning(true);
+          }
+        }
+
+        // Update participants
+        if (sessionData.participants) {
+          console.log('Updating participants:', sessionData.participants.length);
+          setParticipants(sessionData.participants);
+        }
+
+        // Handle session end
+        if (
+          sessionData.status === 'completed' ||
+          sessionData.status === 'cancelled'
+        ) {
+          console.log('Session ended:', sessionData.status);
+          handleGroupSessionEnd(sessionData);
+        }
+      },
+      error => {
+        console.error('Group session listener error:', error);
+        setIsLoading(false);
+        Alert.alert('Error', 'Failed to load session data');
+      },
+    );
+
+    return unsubscribe;
+  }, [isGroupSession, groupSessionId, isRunning, navigation]);
+
+  // Debug effect
   useEffect(() => {
     console.log('PomodoroScreen Debug:', {
       isGroupSession,
       groupSessionId,
       hasRouteTask: !!routeTask,
-      sessionTask: sessionTask ? 'present' : 'null'
+      sessionTask: sessionTask ? 'present' : 'null',
     });
   }, [isGroupSession, groupSessionId, routeTask, sessionTask]);
 
-  if (isGroupSession && isLoading) {
-    return (
-      <View style={[globalStyles.container, styles.container, styles.loadingContainer]}>
-        <Text style={styles.loadingText}>Loading group session...</Text>
-      </View>
+  // Timer logic
+  useEffect(() => {
+    if (isRunning && time > 0) {
+      timerRef.current = setInterval(() => {
+        setTime(prev => prev - 1);
+      }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isRunning, time]);
+
+  // Handle timer completion
+  useEffect(() => {
+    if (time === 0 && isRunning) {
+      setIsRunning(false);
+      handleSessionComplete();
+    }
+  }, [time, isRunning]);
+
+  // Animation effect
+  useEffect(() => {
+    const totalDuration = getSessionDuration(sessionType);
+    const progress = (totalDuration - time) / totalDuration;
+
+    Animated.timing(orbitAnim, {
+      toValue: progress * 360,
+      duration: 300,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start();
+  }, [time, sessionType, orbitAnim]);
+
+  // Auto start effect
+  useEffect(() => {
+    if (autoStartNext && showCompleteModal && !isGroupSession) {
+      const nextType = getNextSessionType();
+      if (nextType) {
+        autoStartTimeoutRef.current = setTimeout(() => {
+          startNextSession(nextType);
+        }, 3000);
+      }
+    }
+
+    return () => {
+      if (autoStartTimeoutRef.current) {
+        clearTimeout(autoStartTimeoutRef.current);
+      }
+    };
+  }, [showCompleteModal, autoStartNext, currentCycle, isGroupSession]);
+
+  // Initialize first session
+  useEffect(() => {
+    if (user && !currentSessionId) {
+      if (isGroupSession && groupSessionId) {
+        setCurrentSessionId(groupSessionId);
+      } else if (!isGroupSession && sessionTask) {
+        createSession('pomodoro').then(() => {
+          setIsRunning(true);
+        });
+      }
+    }
+  }, [user, isGroupSession, groupSessionId, sessionTask, currentSessionId]);
+
+  // Back handler
+  useEffect(() => {
+    const handleBackPress = () => {
+      if (isRunning) {
+        handleAbandonSession();
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      handleBackPress,
     );
-  }
+    return () => backHandler.remove();
+  }, [isRunning, currentSessionId]);
 
-  if (!isGroupSession && !sessionTask) {
-    return null;
-  }
-
-  const pomodoroLength = isGroupSession ? 25 : (sessionTask?.pomodoroLength ?? 25);
-  const breakLength = isGroupSession ? 5 : (sessionTask?.breakLength ?? 5);
-  const plannedPomodoros = isGroupSession ? 4 : (sessionTask?.plannedPomodoros ?? 4);
-  const [time, setTime] = useState(pomodoroLength * 60);
-
-  const timerRef = useRef<number | null>(null);
-  const orbitAnim = useRef(new Animated.Value(0)).current;
-  const autoStartTimeoutRef = useRef<number | null>(null);
-
+  // Function definitions (moved after hooks)
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
       .toString()
@@ -161,7 +317,7 @@ export default function PomodoroScreen() {
     if (sessionType === 'pomodoro') {
       return currentCycle % 4 === 0 ? 'longBreak' : 'shortBreak';
     } else {
-      if (currentCycle >= plannedPomodoros) {
+      if (currentCycle > plannedPomodoros) {
         return undefined;
       }
       return 'pomodoro';
@@ -178,7 +334,6 @@ export default function PomodoroScreen() {
       return;
     }
 
-    // for solo sessions, we need a task
     if (!isGroupSession && !sessionTask) {
       console.error('Cannot create solo session without task');
       return;
@@ -211,7 +366,6 @@ export default function PomodoroScreen() {
     setIsRunning(false);
 
     if (sessionData.status === 'cancelled' && sessionData.consequences) {
-      // show penalty message
       Alert.alert(
         'Session Failed',
         'A participant abandoned the session. Everyone loses 1 star.',
@@ -228,7 +382,6 @@ export default function PomodoroScreen() {
     try {
       await focusSessionService.completeSession(currentSessionId, user.id);
 
-      // stars earned
       const starsEarned =
         sessionType === 'pomodoro' ? (pomodoroLength === 25 ? 5 : 10) : 0;
 
@@ -301,131 +454,9 @@ export default function PomodoroScreen() {
     navigation.goBack();
   };
 
-  // timer logic
-  useEffect(() => {
-    if (isRunning && time > 0) {
-      timerRef.current = setInterval(() => {
-        setTime(prev => prev - 1);
-      }, 1000);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isRunning]);
-
-  useEffect(() => {
-    if (time === 0 && isRunning) {
-      setIsRunning(false);
-      handleSessionComplete();
-    }
-  }, [time]);
-
-  // animation
-  useEffect(() => {
-    const totalDuration = getSessionDuration(sessionType);
-    const progress = (totalDuration - time) / totalDuration;
-
-    Animated.timing(orbitAnim, {
-      toValue: progress * 360,
-      duration: 300,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }).start();
-  }, [time, sessionType]);
-
-  // group session listener
-  useEffect(() => {
-    if (!isGroupSession || !groupSessionId) return;
-
-    const sessionRef = doc(getFirestore(), 'focusSessions', groupSessionId);
-    const unsubscribe = onSnapshot(sessionRef, doc => {
-      const sessionData = doc.data() as focusSessionService.FocusSession;
-      setGroupSession(sessionData);
-      setIsLoading(false);
-
-      if (sessionData.sessionStatus === 'active' && !isRunning) {
-        const startTime =
-          sessionData.startTime?.toDate().getTime() || Date.now();
-        const elapsed = Date.now() - startTime;
-        const remaining = sessionData.duration - Math.floor(elapsed / 1000);
-
-        setTime(Math.max(0, remaining));
-        setIsRunning(true);
-      }
-
-      if (sessionData.participants) {
-        setParticipants(sessionData.participants);
-      }
-
-      if (
-        sessionData.status === 'completed' ||
-        sessionData.status === 'cancelled'
-      ) {
-        handleGroupSessionEnd(sessionData);
-      }
-    });
-
-    return unsubscribe;
-  }, [isGroupSession, groupSessionId]);
-
-  //auto start
-  useEffect(() => {
-    if (autoStartNext && showCompleteModal && !isGroupSession) {
-      const nextType = getNextSessionType();
-      if (nextType) {
-        autoStartTimeoutRef.current = setTimeout(() => {
-          startNextSession(nextType);
-        }, 3000);
-      }
-    }
-
-    return () => {
-      if (autoStartTimeoutRef.current) {
-        clearTimeout(autoStartTimeoutRef.current);
-      }
-    };
-  }, [showCompleteModal, autoStartNext, currentCycle, isGroupSession]);
-
-  // initialize first session
-  useEffect(() => {
-    if (user && !currentSessionId) {
-      if (isGroupSession && groupSessionId) {
-        setCurrentSessionId(groupSessionId);
-      } else if (!isGroupSession && sessionTask) {
-        createSession('pomodoro').then(() => {
-          setIsRunning(true);
-        });
-      }
-    }
-  }, [user, isGroupSession, groupSessionId, sessionTask]);
-
-  useEffect(() => {
-    const handleBackPress = () => {
-      if (isRunning) {
-        handleAbandonSession();
-        return true;
-      }
-      return false;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      handleBackPress,
-    );
-    return () => backHandler.remove();
-  }, [isRunning, currentSessionId]);
-
   const handleStartPause = () => {
     setIsRunning(prev => !prev);
   };
-
-  const orbitRotation = orbitAnim.interpolate({
-    inputRange: [0, 360],
-    outputRange: ['0deg', '360deg'],
-  });
 
   const getSessionTypeDisplay = () => {
     switch (sessionType) {
@@ -483,6 +514,32 @@ export default function PomodoroScreen() {
     </View>
   );
 
+  // Animation values
+  const orbitRotation = orbitAnim.interpolate({
+    inputRange: [0, 360],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  // NOW handle conditional rendering AFTER all hooks are declared
+  if (isGroupSession && isLoading) {
+    return (
+      <View
+        style={[
+          globalStyles.container,
+          styles.container,
+          styles.loadingContainer,
+        ]}
+      >
+        <Text style={styles.loadingText}>Loading group session...</Text>
+      </View>
+    );
+  }
+
+  if (!isGroupSession && !sessionTask) {
+    return null;
+  }
+
+  // Main render
   return (
     <View style={[globalStyles.container, styles.container]}>
       <View style={styles.header}>
@@ -494,7 +551,9 @@ export default function PomodoroScreen() {
       <View style={styles.sessionInfo}>
         <Text style={styles.sessionType}>{getSessionTypeDisplay()}</Text>
         <Text style={styles.taskTitle}>
-          {isGroupSession ? 'Group Session' : (sessionTask?.title || 'Focus Session')}
+          {isGroupSession
+            ? 'Group Session'
+            : sessionTask?.title || 'Focus Session'}
         </Text>
         <View style={styles.tagContainer}>
           <Ionicons
@@ -503,7 +562,7 @@ export default function PomodoroScreen() {
             color={getSessionColor()}
           />
           <Text style={[styles.taskTag, { color: getSessionColor() }]}>
-            {isGroupSession ? 'group' : (sessionTask?.tag || 'focus')}
+            {isGroupSession ? 'group' : sessionTask?.tag || 'focus'}
           </Text>
         </View>
       </View>

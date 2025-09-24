@@ -55,7 +55,7 @@ export interface FocusSession {
 export interface GroupParticipant {
   userId: string;
   username: string;
-  status: 'active' | 'completed' | 'abandoned';
+  status: 'active' | 'completed' | 'invited';
   joinedAt: Timestamp;
   taskId?: string;
   taskTitle?: string;

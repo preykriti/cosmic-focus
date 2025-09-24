@@ -42,6 +42,7 @@ export const LobbyScreen: React.FC = () => {
 
   const hasShownNotification = useRef<boolean>(false);
   const previousInviteStatus = useRef<string | null>(null);
+  const hasNavigatedToPomodoro = useRef<boolean>(false);
 
   useEffect(() => {
     console.log('Setting up Firestore listener for session:', sessionId);
@@ -57,11 +58,27 @@ export const LobbyScreen: React.FC = () => {
           console.log('Session data:', sessionData);
           setSession(sessionData);
 
+          if (
+            sessionData.sessionStatus === 'active' &&
+            sessionData.status === 'active' &&
+            !hasNavigatedToPomodoro.current
+          ) {
+            console.log('Session started, navigating to Pomodoro screen');
+            hasNavigatedToPomodoro.current = true;
+
+            // Navigate to PomodoroScreen with group session parameters
+            navigation.navigate('Pomodoro', {
+              autoStartNext: false,
+              isGroupSession: true,
+              groupSessionId: sessionId,
+              task: null,
+            });
+            return; // Exit early since we're navigating away
+          }
+
           const currentUserParticipant = sessionData.participants?.find(
             participant => participant.userId === CURRENT_USER_ID,
           );
-
-          console.log('Current user participant:', currentUserParticipant);
 
           if (currentUserParticipant) {
             const currentStatus = currentUserParticipant.status;
@@ -143,14 +160,16 @@ export const LobbyScreen: React.FC = () => {
         status: 'active',
         sessionStatus: 'active',
         startedAt: new Date(),
+        startTime: new Date(),
       });
 
-      navigation.navigate('Pomodoro', {
-        autoStartNext: false,
-        isGroupSession: true,
-        groupSessionId: sessionId,
-        task: null,
-      });
+      // navigation.navigate('Pomodoro', {
+      //   autoStartNext: false,
+      //   isGroupSession: true,
+      //   groupSessionId: sessionId,
+      //   task: null,
+      // });
+      console.log('Session started successfully');
     } catch (error) {
       console.error('Error starting session:', error);
       Alert.alert('Error', 'Failed to start session');
