@@ -34,7 +34,7 @@ export default function SessionCompleteModal({
   onStartNext,
   onFinishSession,
 }: SessionCompleteModalProps) {
-  const isLastCycle = currentCycle >= totalCycles;
+  const isLastCycle = currentCycle > totalCycles;
   
   const getSessionTypeText = (type: string) => {
     switch (type) {
@@ -81,13 +81,15 @@ export default function SessionCompleteModal({
 
           {starsEarned > 0 && (
             <View style={styles.starsContainer}>
-              <Ionicons name="star" size={24} color="#f59e0b" />
+              <Ionicons name="star" size={24} color={colors.star} />
               <Text style={styles.starsText}>+{starsEarned} Stars Earned!</Text>
             </View>
           )}
 
           <Text style={styles.progressText}>
-            Cycle {currentCycle} of {totalCycles} completed
+            {/* Cycle {currentCycle} of {totalCycles} completed */}
+            Cycle {sessionType === 'pomodoro' ? currentCycle : currentCycle - 1}{' '}
+            of {totalCycles} completed
           </Text>
 
           {!isLastCycle && nextSessionType && (
@@ -126,7 +128,7 @@ export default function SessionCompleteModal({
           {isLastCycle && (
             <>
               <Text style={styles.completionText}>
-                🎉 All cycles completed! Great job!
+                All cycles completed! Great job!
               </Text>
               
               <TouchableOpacity
@@ -181,7 +183,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    backgroundColor: '#fef3c7',
+    backgroundColor: colors.light.mutedcard,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -190,7 +192,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 16,
     fontWeight: '600',
-    color: '#d97706',
+    color: colors.star,
   },
   progressText: {
     fontSize: 14,
