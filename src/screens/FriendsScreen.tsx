@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { globalStyles } from '../styles/global';
 import { SearchBar } from '../components/friends/SearchBar';
 import { TabNavigator } from '../components/friends/TabNavigator';
@@ -9,6 +9,18 @@ import { FriendItem } from '../components/friends/FriendItem';
 import { SearchResultItem } from '../components/friends/SearchResultItem';
 import { FriendRequestItem } from '../components/friends/FriendRequestItem';
 import { useFriendsLogic } from '../hooks/useFriendsLogic';
+import { Text } from 'react-native-gesture-handler';
+import { PomodoroLengthModal } from '../components/groupSession/PomodoroLengthModal';
+import { FriendSelectionModal } from '../components/groupSession/FriendsSelectionModal';
+import { useNavigation } from '@react-navigation/core';
+import { GroupParticipant } from '../types/focusSession';
+import {
+  createFocusSession,
+  CreateSessionData,
+} from '../firebase/firestore/focusSession';
+import { useAppSelector } from '../store/hooks';
+import { Timestamp } from '@react-native-firebase/firestore';
+import { SessionDebugComponent } from '../components/SessionDebug';
 
 export default function FriendsScreen() {
   const {
@@ -31,7 +43,85 @@ export default function FriendsScreen() {
     isUserFriend,
     getFriendStreak,
   } = useFriendsLogic();
+
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [pomodoroModalVisible, setPomodoroModalVisible] = useState(false);
+  const [friendModalVisible, setFriendModalVisible] = useState(false);
+  const [selectedPomodoro, setSelectedPomodoro] = useState<{
+    work: number;
+    breakTime: number;
+  } | null>(null);
+  const { user } = useAppSelector(state => state.auth);
+  const navigation = useNavigation();
+
+  const handleStartGroupSession = () => setPomodoroModalVisible(true);
+
+  const handlePomodoroSelect = (work: number, breakTime: number) => {
+    setSelectedPomodoro({ work, breakTime });
+    setPomodoroModalVisible(false);
+    setFriendModalVisible(true);
+  };
+
+  const handleFriendConfirm = async (selectedFriends: any[]) => {
+    console.log('Selected friends:', selectedFriends);
+    console.log('Pomodoro length:', selectedPomodoro);
+
+    if (!selectedPomodoro || !user?.id || !user?.username) {
+      console.error('Missing required data:', {
+        selectedPomodoro,
+        userId: user?.id,
+        username: user?.username,
+      });
+      return;
+    }
+
+    try {
+      const invitedParticipants: GroupParticipant[] = selectedFriends.map(
+        friend => ({
+          userId: friend.id,
+          username: friend.name || friend.username,
+          status: 'invited',
+          joinedAt: Timestamp.now(),
+          starsEarned: 0,
+        }),
+      );
+
+      // add host as participant
+      const hostParticipant: GroupParticipant = {
+        userId: user.id,
+        username: user.username,
+        status: 'active',
+        joinedAt: Timestamp.now(),
+        starsEarned: 0,
+      };
+
+      // combine all participants: host + invited friends
+      const allParticipants = [hostParticipant, ...invitedParticipants];
+
+      const sessionData: CreateSessionData = {
+        sessionMode: 'group',
+        hostUserId: user.id,
+        groupName: 'Focus Group Session',
+        participants: allParticipants,
+        sessionType: 'pomodoro',
+        duration: selectedPomodoro.work,
+        autoStartNext: false,
+        currentCycle: 1,
+        totalCycles: 1,
+      };
+
+      console.log('Creating session with data:', sessionData);
+
+      const sessionResult = await createFocusSession(sessionData);
+
+      console.log('Session created successfully:', sessionResult);
+
+      setFriendModalVisible(false);
+      navigation.navigate('Lobby', { sessionId: sessionResult.id });
+    } catch (err) {
+      console.error('Error creating group session:', err);
+    }
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -164,6 +254,36 @@ export default function FriendsScreen() {
         {!showSearchResults && activeTab === 'friends' && renderFriendsList()}
         {!showSearchResults && activeTab === 'requests' && renderRequestsList()}
       </View>
+
+      <TouchableOpacity
+        style={{
+          margin: 10,
+          padding: 12,
+          backgroundColor: '#6366F1',
+          borderRadius: 8,
+        }}
+        onPress={handleStartGroupSession}
+      >
+        <Text
+          style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}
+        >
+          Start Group Session
+        </Text>
+      </TouchableOpacity>
+      <SessionDebugComponent />
+
+      <PomodoroLengthModal
+        visible={pomodoroModalVisible}
+        onClose={() => setPomodoroModalVisible(false)}
+        onSelectLength={handlePomodoroSelect}
+      />
+
+      <FriendSelectionModal
+        visible={friendModalVisible}
+        friends={filteredFriends}
+        onClose={() => setFriendModalVisible(false)}
+        onConfirm={handleFriendConfirm}
+      />
     </View>
   );
 }
@@ -174,6 +294,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     paddingHorizontal: 16,
     paddingTop: 20,
+    marginBottom: 40,
   },
   card: {
     backgroundColor: '#fff',

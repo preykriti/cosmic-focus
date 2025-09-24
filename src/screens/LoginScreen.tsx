@@ -16,6 +16,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import { BlurView } from '@react-native-community/blur';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../types/navigation';
+import { getFcmToken } from '../firebase/notifications/messaging';
+import { updateUserFcmToken } from '../firebase/firestore/users';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   AuthStackParamList,
@@ -43,7 +45,11 @@ export default function LoginScreen({ navigation }: Props) {
 
     setIsLoading(true);
     try {
-      await dispatch(loginUser({ email, password })).unwrap();
+      const result = await dispatch(loginUser({ email, password })).unwrap();
+      const token = await getFcmToken();
+      if(token && result?.user?.id) {
+        await updateUserFcmToken(result.user.id, token);
+      }
     } catch (e) {
     } finally {
       setIsLoading(false);

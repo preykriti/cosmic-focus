@@ -9,6 +9,7 @@ import {
   Easing,
   Alert,
   BackHandler,
+  FlatList,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -17,9 +18,15 @@ import { colors } from '../constants/colors';
 import SessionCompleteModal from '../components/focusSession/SessionCompleteModal';
 import * as focusSessionService from '../firebase/firestore/focusSession';
 import { useAppSelector } from '../store/hooks';
+import {
+  doc,
+  onSnapshot,
+  serverTimestamp,
+} from '@react-native-firebase/firestore';
+import { getFirestore } from '@react-native-firebase/firestore';
 
 type RouteParams = {
-  task: {
+  task?: {
     id: string;
     title: string;
     tag: string;
@@ -28,28 +35,96 @@ type RouteParams = {
     plannedPomodoros: number;
   };
   autoStartNext: boolean;
+  isGroupSession?: boolean;
+  groupSessionId?: string;
 };
 
 const { height } = Dimensions.get('window');
 
+const GROUP_SESSION_DEFAULT_TASK = {
+  id: 'group-session-default',
+  title: 'Group Session',
+  tag: 'group',
+  pomodoroLength: 25 as 25 | 50,
+  breakLength: 5 as 5 | 10,
+  plannedPomodoros: 4,
+};
+
 export default function PomodoroScreen() {
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
   const navigation = useNavigation();
-  const { task, autoStartNext } = route.params;
+  const {
+    task: routeTask,
+    autoStartNext,
+    isGroupSession = false,
+    groupSessionId,
+  } = route.params;
 
   const user = useAppSelector(state => state.auth.user);
 
-  // Session state
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionType, setSessionType] = useState<
     'pomodoro' | 'shortBreak' | 'longBreak'
   >('pomodoro');
   const [currentCycle, setCurrentCycle] = useState(1);
-  const [time, setTime] = useState(task.pomodoroLength * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [lastCompletedStars, setLastCompletedStars] = useState(0);
   const [testButton, setTestButton] = useState(true);
+  const [participants, setParticipants] = useState<
+    focusSessionService.GroupParticipant[]
+  >([]);
+  const [groupSession, setGroupSession] =
+    useState<focusSessionService.FocusSession | null>(null);
+  const [isLoading, setIsLoading] = useState(isGroupSession && groupSessionId ? true : false);
+
+  // determine the task to use
+  const getSessionTask = () => {
+    if (isGroupSession) {
+      return null; 
+    }
+    
+    return routeTask || null;
+  };
+
+  const sessionTask = getSessionTask();
+
+  useEffect(() => {
+    if (!isGroupSession && !sessionTask) {
+      console.error('No task available for solo session');
+      Alert.alert(
+        'Error', 
+        'No task selected for this session.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    }
+  }, [sessionTask, navigation, isGroupSession]);
+
+  useEffect(() => {
+    console.log('PomodoroScreen Debug:', {
+      isGroupSession,
+      groupSessionId,
+      hasRouteTask: !!routeTask,
+      sessionTask: sessionTask ? 'present' : 'null'
+    });
+  }, [isGroupSession, groupSessionId, routeTask, sessionTask]);
+
+  if (isGroupSession && isLoading) {
+    return (
+      <View style={[globalStyles.container, styles.container, styles.loadingContainer]}>
+        <Text style={styles.loadingText}>Loading group session...</Text>
+      </View>
+    );
+  }
+
+  if (!isGroupSession && !sessionTask) {
+    return null;
+  }
+
+  const pomodoroLength = isGroupSession ? 25 : (sessionTask?.pomodoroLength ?? 25);
+  const breakLength = isGroupSession ? 5 : (sessionTask?.breakLength ?? 5);
+  const plannedPomodoros = isGroupSession ? 4 : (sessionTask?.plannedPomodoros ?? 4);
+  const [time, setTime] = useState(pomodoroLength * 60);
 
   const timerRef = useRef<number | null>(null);
   const orbitAnim = useRef(new Animated.Value(0)).current;
@@ -68,13 +143,13 @@ export default function PomodoroScreen() {
   ) => {
     switch (type) {
       case 'pomodoro':
-        return task.pomodoroLength * 60;
+        return pomodoroLength * 60;
       case 'shortBreak':
-        return task.breakLength * 60;
+        return breakLength * 60;
       case 'longBreak':
-        return task.breakLength * 2 * 60;
+        return breakLength * 2 * 60;
       default:
-        return task.pomodoroLength * 60;
+        return pomodoroLength * 60;
     }
   };
 
@@ -86,7 +161,7 @@ export default function PomodoroScreen() {
     if (sessionType === 'pomodoro') {
       return currentCycle % 4 === 0 ? 'longBreak' : 'shortBreak';
     } else {
-      if (currentCycle >= task.plannedPomodoros) {
+      if (currentCycle >= plannedPomodoros) {
         return undefined;
       }
       return 'pomodoro';
@@ -98,17 +173,28 @@ export default function PomodoroScreen() {
   ) => {
     if (!user) return;
 
+    if (isGroupSession && groupSessionId) {
+      setCurrentSessionId(groupSessionId);
+      return;
+    }
+
+    // for solo sessions, we need a task
+    if (!isGroupSession && !sessionTask) {
+      console.error('Cannot create solo session without task');
+      return;
+    }
+
     try {
-      const sessionData = {
-        sessionMode: 'solo' as const,
+      const sessionData: focusSessionService.CreateSessionData = {
+        sessionMode: isGroupSession ? 'group' : 'solo',
         userId: user.id,
-        taskId: task.id,
-        taskTitle: task.title,
+        taskId: sessionTask?.id,
+        taskTitle: sessionTask?.title,
         sessionType: type,
         duration: getSessionDuration(type),
         autoStartNext,
         currentCycle,
-        totalCycles: task.plannedPomodoros,
+        totalCycles: plannedPomodoros,
       };
 
       const session = await focusSessionService.createFocusSession(sessionData);
@@ -116,7 +202,23 @@ export default function PomodoroScreen() {
       return session;
     } catch (error) {
       console.error('Failed to create session:', error);
-      Alert.alert('Error', 'Failed to start session');
+    }
+  };
+
+  const handleGroupSessionEnd = async (
+    sessionData: focusSessionService.FocusSession,
+  ) => {
+    setIsRunning(false);
+
+    if (sessionData.status === 'cancelled' && sessionData.consequences) {
+      // show penalty message
+      Alert.alert(
+        'Session Failed',
+        'A participant abandoned the session. Everyone loses 1 star.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }],
+      );
+    } else {
+      navigation.goBack();
     }
   };
 
@@ -128,7 +230,7 @@ export default function PomodoroScreen() {
 
       // stars earned
       const starsEarned =
-        sessionType === 'pomodoro' ? (task.pomodoroLength === 25 ? 5 : 10) : 0;
+        sessionType === 'pomodoro' ? (pomodoroLength === 25 ? 5 : 10) : 0;
 
       setLastCompletedStars(starsEarned);
       setShowCompleteModal(true);
@@ -145,28 +247,38 @@ export default function PomodoroScreen() {
   const handleAbandonSession = async () => {
     if (!currentSessionId || !user) return;
 
-    Alert.alert(
-      'Give Up Session',
-      "Are you sure you want to give up? You won't earn any stars and your progress won't be counted.",
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Give Up',
-          style: 'destructive',
-          onPress: async () => {
-            try {
+    const alertTitle = isGroupSession
+      ? 'Give Up Group Session'
+      : 'Give Up Session';
+    const alertMessage = isGroupSession
+      ? 'Are you sure you want to give up? This will end the session for everyone and all participants will lose 1 star.'
+      : "Are you sure you want to give up? You won't earn any stars and your progress won't be counted.";
+
+    Alert.alert(alertTitle, alertMessage, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Give Up',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            if (isGroupSession) {
+              await focusSessionService.abandonGroupSession(
+                currentSessionId,
+                user.id,
+              );
+            } else {
               await focusSessionService.abandonSession(
                 currentSessionId,
                 user.id,
               );
-              navigation.goBack();
-            } catch (error) {
-              console.error('Failed to abandon session:', error);
             }
-          },
+            navigation.goBack();
+          } catch (error) {
+            console.error('Failed to abandon session:', error);
+          }
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const startNextSession = async (
@@ -224,9 +336,44 @@ export default function PomodoroScreen() {
     }).start();
   }, [time, sessionType]);
 
+  // group session listener
+  useEffect(() => {
+    if (!isGroupSession || !groupSessionId) return;
+
+    const sessionRef = doc(getFirestore(), 'focusSessions', groupSessionId);
+    const unsubscribe = onSnapshot(sessionRef, doc => {
+      const sessionData = doc.data() as focusSessionService.FocusSession;
+      setGroupSession(sessionData);
+      setIsLoading(false);
+
+      if (sessionData.sessionStatus === 'active' && !isRunning) {
+        const startTime =
+          sessionData.startTime?.toDate().getTime() || Date.now();
+        const elapsed = Date.now() - startTime;
+        const remaining = sessionData.duration - Math.floor(elapsed / 1000);
+
+        setTime(Math.max(0, remaining));
+        setIsRunning(true);
+      }
+
+      if (sessionData.participants) {
+        setParticipants(sessionData.participants);
+      }
+
+      if (
+        sessionData.status === 'completed' ||
+        sessionData.status === 'cancelled'
+      ) {
+        handleGroupSessionEnd(sessionData);
+      }
+    });
+
+    return unsubscribe;
+  }, [isGroupSession, groupSessionId]);
+
   //auto start
   useEffect(() => {
-    if (autoStartNext && showCompleteModal) {
+    if (autoStartNext && showCompleteModal && !isGroupSession) {
       const nextType = getNextSessionType();
       if (nextType) {
         autoStartTimeoutRef.current = setTimeout(() => {
@@ -240,16 +387,20 @@ export default function PomodoroScreen() {
         clearTimeout(autoStartTimeoutRef.current);
       }
     };
-  }, [showCompleteModal, autoStartNext, currentCycle]);
+  }, [showCompleteModal, autoStartNext, currentCycle, isGroupSession]);
 
   // initialize first session
   useEffect(() => {
     if (user && !currentSessionId) {
-      createSession('pomodoro').then(() => {
-        setIsRunning(true);
-      });
+      if (isGroupSession && groupSessionId) {
+        setCurrentSessionId(groupSessionId);
+      } else if (!isGroupSession && sessionTask) {
+        createSession('pomodoro').then(() => {
+          setIsRunning(true);
+        });
+      }
     }
-  }, [user]);
+  }, [user, isGroupSession, groupSessionId, sessionTask]);
 
   useEffect(() => {
     const handleBackPress = () => {
@@ -302,6 +453,36 @@ export default function PomodoroScreen() {
     }
   };
 
+  const renderParticipant = ({
+    item,
+  }: {
+    item: focusSessionService.GroupParticipant;
+  }) => (
+    <View style={styles.participantItem}>
+      <Text style={styles.participantName}>{item.username}</Text>
+      <View style={styles.participantStatus}>
+        {item.status === 'active' && (
+          <View
+            style={[
+              styles.statusDot,
+              { backgroundColor: colors.light.success },
+            ]}
+          />
+        )}
+        {item.status === 'completed' && (
+          <Ionicons
+            name="checkmark-circle"
+            size={16}
+            color={colors.light.success}
+          />
+        )}
+        {item.status === 'abandoned' && (
+          <Ionicons name="close-circle" size={16} color={colors.light.error} />
+        )}
+      </View>
+    </View>
+  );
+
   return (
     <View style={[globalStyles.container, styles.container]}>
       <View style={styles.header}>
@@ -312,22 +493,40 @@ export default function PomodoroScreen() {
 
       <View style={styles.sessionInfo}>
         <Text style={styles.sessionType}>{getSessionTypeDisplay()}</Text>
-        <Text style={styles.taskTitle}>{task.title}</Text>
+        <Text style={styles.taskTitle}>
+          {isGroupSession ? 'Group Session' : (sessionTask?.title || 'Focus Session')}
+        </Text>
         <View style={styles.tagContainer}>
           <Ionicons
-            name="pricetag-outline"
+            name={isGroupSession ? 'people' : 'pricetag-outline'}
             size={16}
             color={getSessionColor()}
           />
           <Text style={[styles.taskTag, { color: getSessionColor() }]}>
-            {task.tag}
+            {isGroupSession ? 'group' : (sessionTask?.tag || 'focus')}
           </Text>
         </View>
       </View>
 
+      {isGroupSession && participants.length > 0 && (
+        <View style={styles.participantsContainer}>
+          <Text style={styles.participantsTitle}>Participants</Text>
+          <FlatList
+            data={participants}
+            keyExtractor={item => item.userId}
+            renderItem={renderParticipant}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.participantsList}
+          />
+        </View>
+      )}
+
       <View style={styles.cycleProgress}>
         <Text style={styles.cycleText}>
-          Cycle {currentCycle} of {task.plannedPomodoros}
+          {isGroupSession
+            ? 'Group Focus Session'
+            : `Cycle ${currentCycle} of ${plannedPomodoros}`}
         </Text>
       </View>
 
@@ -376,6 +575,7 @@ export default function PomodoroScreen() {
           <Ionicons name="flag-outline" size={20} color="#fff" />
           <Text style={styles.controlText}>Give Up</Text>
         </TouchableOpacity>
+
         {testButton && (
           <TouchableOpacity
             style={[styles.controlButton, { backgroundColor: '#10b981' }]}
@@ -397,9 +597,9 @@ export default function PomodoroScreen() {
         sessionType={sessionType}
         starsEarned={lastCompletedStars}
         currentCycle={currentCycle}
-        totalCycles={task.plannedPomodoros}
-        nextSessionType={getNextSessionType()}
-        autoStartNext={autoStartNext}
+        totalCycles={plannedPomodoros}
+        nextSessionType={isGroupSession ? undefined : getNextSessionType()}
+        autoStartNext={autoStartNext && !isGroupSession}
         onStartNext={() => startNextSession()}
         onFinishSession={finishAllSessions}
       />
@@ -414,6 +614,14 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 16,
     height: height - 50,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.light.textSecondary,
   },
   header: {
     flexDirection: 'row',
@@ -450,6 +658,48 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 4,
     textTransform: 'capitalize',
+  },
+  participantsContainer: {
+    marginBottom: 16,
+  },
+  participantsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.light.textSecondary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  participantsList: {
+    paddingHorizontal: 16,
+  },
+  participantItem: {
+    backgroundColor: '#fff',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginRight: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  participantName: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.light.text,
+    marginRight: 6,
+  },
+  participantStatus: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   cycleProgress: {
     alignItems: 'center',
