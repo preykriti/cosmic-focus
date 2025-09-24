@@ -2,12 +2,12 @@ import React, { useCallback, useState } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { globalStyles } from '../styles/global';
 import { SearchBar } from '../components/friends/SearchBar';
-import { TabNavigator } from '../components/friends/TabNavigator';
-import { SectionHeader } from '../components/friends/SectionHeader';
-import { EmptyState } from '../components/friends/EmptyState';
-import { FriendItem } from '../components/friends/FriendItem';
-import { SearchResultItem } from '../components/friends/SearchResultItem';
-import { FriendRequestItem } from '../components/friends/FriendRequestItem';
+import TabNavigator from '../components/friends/TabNavigator';
+import SectionHeader from '../components/friends/SectionHeader';
+import EmptyState from '../components/friends/EmptyState';
+import FriendItem from '../components/friends/FriendItem';
+import SearchResultItem from '../components/friends/SearchResultItem';
+import FriendRequestItem from '../components/friends/FriendRequestItem';
 import { useFriendsLogic } from '../hooks/useFriendsLogic';
 import { Text } from 'react-native-gesture-handler';
 import { PomodoroLengthModal } from '../components/groupSession/PomodoroLengthModal';
@@ -21,6 +21,8 @@ import {
 import { useAppSelector } from '../store/hooks';
 import { Timestamp } from '@react-native-firebase/firestore';
 import { SessionDebugComponent } from '../components/SessionDebug';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '../types/navigation';
 
 export default function FriendsScreen() {
   const {
@@ -45,14 +47,16 @@ export default function FriendsScreen() {
   } = useFriendsLogic();
 
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [pomodoroModalVisible, setPomodoroModalVisible] = useState(false);
-  const [friendModalVisible, setFriendModalVisible] = useState(false);
+  const [pomodoroModalVisible, setPomodoroModalVisible] =
+    useState<boolean>(false);
+  const [friendModalVisible, setFriendModalVisible] = useState<boolean>(false);
   const [selectedPomodoro, setSelectedPomodoro] = useState<{
     work: number;
     breakTime: number;
   } | null>(null);
   const { user } = useAppSelector(state => state.auth);
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   const handleStartGroupSession = () => setPomodoroModalVisible(true);
 
@@ -256,19 +260,10 @@ export default function FriendsScreen() {
       </View>
 
       <TouchableOpacity
-        style={{
-          margin: 10,
-          padding: 12,
-          backgroundColor: '#6366F1',
-          borderRadius: 8,
-        }}
+        style={styles.startGroupButton}
         onPress={handleStartGroupSession}
       >
-        <Text
-          style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}
-        >
-          Start Group Session
-        </Text>
+        <Text style={styles.startGroupButtonText}>Start Group Session</Text>
       </TouchableOpacity>
       <SessionDebugComponent />
 
@@ -307,5 +302,16 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     paddingBottom: 80,
+  },
+  startGroupButton: {
+    margin: 10,
+    padding: 12,
+    backgroundColor: '#6366F1',
+    borderRadius: 8,
+  },
+  startGroupButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });

@@ -7,8 +7,9 @@ import {
   StyleSheet,
 } from 'react-native';
 import Ionicon from '@react-native-vector-icons/ionicons';
+import { colors } from '../../constants/colors';
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   type: 'loading' | 'error' | 'empty' | 'search-empty';
   message?: string;
   error?: string;
@@ -16,27 +17,33 @@ interface EmptyStateProps {
   onRetry?: () => void;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
+export default function EmptyState({
   type,
   message,
   error,
   searchQuery,
   onRetry,
-}) => {
+}: EmptyStateProps) {
   const renderContent = () => {
     switch (type) {
       case 'loading':
         return (
           <>
-            <ActivityIndicator size="large" color="#1e3a8a" />
+            <ActivityIndicator size="large" color={colors.light.primary} />
             <Text style={styles.emptyStateText}>{message || 'Loading...'}</Text>
           </>
         );
       case 'error':
         return (
           <>
-            <Ionicon name="alert-circle-outline" size={48} color="#ef4444" />
-            <Text style={[styles.emptyStateText, { color: '#ef4444' }]}>
+            <Ionicon
+              name="alert-circle-outline"
+              size={48}
+              color={colors.light.error}
+            />
+            <Text
+              style={[styles.emptyStateText, { color: colors.light.error }]}
+            >
               {error || 'An error occurred'}
             </Text>
             {onRetry && (
@@ -66,7 +73,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   };
 
   return <View style={styles.emptyState}>{renderContent()}</View>;
-};
+}
 
 const styles = StyleSheet.create({
   emptyState: {

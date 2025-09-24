@@ -15,12 +15,12 @@ interface SearchBarProps {
   loading: boolean;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({
+export const SearchBar = ({
   searchQuery,
   onSearch,
   onClear,
   loading,
-}) => {
+}: SearchBarProps) => {
   return (
     <View style={styles.searchContainer}>
       <Ionicon
