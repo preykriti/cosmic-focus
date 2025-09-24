@@ -17,14 +17,14 @@ interface SearchResultItemProps {
   onSendRequest: (userId: string) => void;
 }
 
-export const SearchResultItem: React.FC<SearchResultItemProps> = ({
+export default function SearchResultItem({
   user,
   isFriend,
   streak,
   isPending,
   isSent,
   onSendRequest,
-}) => {
+}: SearchResultItemProps) {
   return (
     <View style={styles.friendItem}>
       {/* avatar */}
@@ -64,7 +64,7 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = ({
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   friendItem: {

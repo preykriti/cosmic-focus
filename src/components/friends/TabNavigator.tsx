@@ -9,12 +9,11 @@ interface TabNavigatorProps {
   requestsCount: number;
 }
 
-export const TabNavigator: React.FC<TabNavigatorProps> = ({
+export default function TabNavigator({
   activeTab,
   onTabChange,
-  friendsCount,
   requestsCount,
-}) => {
+}: TabNavigatorProps) {
   return (
     <View style={styles.tabContainer}>
       <TouchableOpacity
@@ -29,11 +28,6 @@ export const TabNavigator: React.FC<TabNavigatorProps> = ({
         >
           Friends
         </Text>
-        {/* {friendsCount > 0 && (
-          <View style={styles.tabBadge}>
-            <Text style={styles.tabBadgeText}>{friendsCount}</Text>
-          </View>
-        )} */}
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
@@ -55,7 +49,7 @@ export const TabNavigator: React.FC<TabNavigatorProps> = ({
       </TouchableOpacity>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   tabContainer: {

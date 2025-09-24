@@ -6,7 +6,7 @@ interface StreakDisplayProps {
   streak: number;
 }
 
-export const StreakDisplay: React.FC<StreakDisplayProps> = ({ streak }) => {
+export default function StreakDisplay({ streak }: StreakDisplayProps) {
   return (
     <View style={styles.streakRow}>
       <View style={styles.streakContainer}>
@@ -16,7 +16,7 @@ export const StreakDisplay: React.FC<StreakDisplayProps> = ({ streak }) => {
       <Text style={styles.streakLabel}>day streak</Text>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   streakRow: {

@@ -8,11 +8,11 @@ interface SectionHeaderProps {
   countLabel?: string;
 }
 
-export const SectionHeader: React.FC<SectionHeaderProps> = ({
+export default function SectionHeader({
   title,
   count,
   countLabel = 'items',
-}) => {
+}: SectionHeaderProps) {
   return (
     <View style={styles.friendsHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -21,7 +21,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
       </Text>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   friendsHeader: {

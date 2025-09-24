@@ -1,13 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicon from '@react-native-vector-icons/ionicons';
-
-interface FriendRequest {
-  id: string;
-  fromUsername: string;
-  from: string;
-  to: string;
-}
+import { FriendRequest } from '../../types/friends';
 
 interface FriendRequestItemProps {
   request: FriendRequest;
@@ -15,11 +9,11 @@ interface FriendRequestItemProps {
   onDecline: (requestId: string) => void;
 }
 
-export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
+export default function FriendRequestItem({
   request,
   onAccept,
   onDecline,
-}) => {
+}: FriendRequestItemProps) {
   return (
     <View style={styles.friendItem}>
       {/* avatar */}
@@ -46,7 +40,7 @@ export const FriendRequestItem: React.FC<FriendRequestItemProps> = ({
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   friendItem: {
