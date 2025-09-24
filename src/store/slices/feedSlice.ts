@@ -60,6 +60,7 @@ export const createFeed = createAsyncThunk(
     },
     { rejectWithValue },
   ) => {
+    console.log('createing feed');
     try {
       return await feedsService.createFeed(userId, type, amount, message);
     } catch (error) {
@@ -98,6 +99,23 @@ export const fetchFriendFeeds = createAsyncThunk(
 );
 
 // like a post
+// export const likeFeed = createAsyncThunk(
+//   'feeds/likeFeed',
+//   async (
+//     { feedId, userId }: { feedId: string; userId: string },
+//     { rejectWithValue },
+//   ) => {
+//     try {
+//       await feedsService.likeFeed(feedId, userId);
+//       return { feedId, userId };
+//     } catch (error) {
+//       return rejectWithValue(
+//         error instanceof Error ? error.message : 'Failed to like feed',
+//       );
+//     }
+//   },
+// );
+
 export const likeFeed = createAsyncThunk(
   'feeds/likeFeed',
   async (
@@ -105,8 +123,8 @@ export const likeFeed = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      await feedsService.likeFeed(feedId, userId);
-      return { feedId, userId };
+      const updatedFeed = await feedsService.likeFeed(feedId, userId);
+      return updatedFeed; // now returns Feed
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'Failed to like feed',
@@ -123,7 +141,7 @@ export const unlikeFeed = createAsyncThunk(
   ) => {
     try {
       await feedsService.unlikeFeed(feedId, userId);
-      return { feedId, userId };
+      return { feedId, userId }; // just return info, not the full feed
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'Failed to unlike feed',
@@ -275,11 +293,10 @@ const feedSlice = createSlice({
       })
 
       .addCase(likeFeed.fulfilled, (state, action) => {
-        const { feedId, userId } = action.payload;
-        const feed = state.feedMap[feedId];
-        if (feed && !feed.likes.includes(userId)) {
-          feed.likes.push(userId);
-        }
+        const feed = action.payload;
+        state.feedMap[feed.id] = feed;
+        const index = state.feeds.findIndex(f => f.id === feed.id);
+        if (index !== -1) state.feeds[index] = feed;
       })
 
       .addCase(unlikeFeed.fulfilled, (state, action) => {
@@ -287,8 +304,14 @@ const feedSlice = createSlice({
         const feed = state.feedMap[feedId];
         if (feed) {
           feed.likes = feed.likes.filter(id => id !== userId);
+
+          const index = state.feeds.findIndex(f => f.id === feedId);
+          if (index !== -1) {
+            state.feeds[index].likes = feed.likes;
+          }
         }
       })
+
       .addCase(addComment.fulfilled, (state, action) => {
         const comment = action.payload;
 

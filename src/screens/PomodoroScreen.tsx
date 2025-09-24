@@ -161,7 +161,7 @@ export default function PomodoroScreen() {
     if (sessionType === 'pomodoro') {
       return currentCycle % 4 === 0 ? 'longBreak' : 'shortBreak';
     } else {
-      if (currentCycle >= plannedPomodoros) {
+      if (currentCycle > plannedPomodoros) {
         return undefined;
       }
       return 'pomodoro';

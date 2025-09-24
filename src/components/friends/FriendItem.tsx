@@ -13,7 +13,11 @@ interface FriendItemProps {
   onPress?: () => void;
 }
 
+<<<<<<< Updated upstream
 export const FriendItem: React.FC<FriendItemProps> = ({ friend, onPress }) => {
+=======
+export default function FriendItem({ friend, onPress }: FriendItemProps) {
+>>>>>>> Stashed changes
   return (
     <TouchableOpacity
       style={styles.friendItem}

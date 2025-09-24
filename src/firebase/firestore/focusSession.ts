@@ -8,6 +8,10 @@ import {
   Timestamp,
   increment,
   serverTimestamp,
+  query,
+  where,
+  getDocs,
+  FirebaseFirestoreTypes,
 } from '@react-native-firebase/firestore';
 import {
   calculateStars,
@@ -43,7 +47,13 @@ export interface FocusSession {
 export interface GroupParticipant {
   userId: string;
   username: string;
-  status: 'invited' | 'accepted' | 'declined' | 'active' | 'completed' | 'abandoned';
+  status:
+    | 'invited'
+    | 'accepted'
+    | 'declined'
+    | 'active'
+    | 'completed'
+    | 'abandoned';
   joinedAt: Timestamp;
   taskId?: string;
   taskTitle?: string;
@@ -102,9 +112,10 @@ export const createFocusSession = async (
   if (sessionData.sessionMode === 'group' && sessionData.participants) {
     processedParticipants = sessionData.participants.map(participant => ({
       ...participant,
-      joinedAt: participant.joinedAt instanceof Timestamp 
-        ? participant.joinedAt 
-        : Timestamp.now(),
+      joinedAt:
+        participant.joinedAt instanceof Timestamp
+          ? participant.joinedAt
+          : Timestamp.now(),
     }));
   }
 
@@ -129,7 +140,7 @@ export const createFocusSession = async (
       groupId: sessionData.groupId || sessionRef.id,
       hostUserId: sessionData.hostUserId,
       groupName: sessionData.groupName,
-      participants: processedParticipants, 
+      participants: processedParticipants,
       groupSettings: sessionData.groupSettings || {
         requireAllToComplete: true,
         penaltyForQuitting: { deadStarsGained: 1, applyToAll: true },
@@ -140,11 +151,17 @@ export const createFocusSession = async (
     }),
   };
 
-  console.log('Writing session to Firestore:', JSON.stringify(session, null, 2));
+  console.log(
+    'Writing session to Firestore:',
+    JSON.stringify(session, null, 2),
+  );
 
   try {
     await setDoc(sessionRef, session);
-    console.log('Session created successfully in Firestore with ID:', sessionRef.id);
+    console.log(
+      'Session created successfully in Firestore with ID:',
+      sessionRef.id,
+    );
     return session;
   } catch (error) {
     console.error('Error creating session in Firestore:', error);
@@ -210,7 +227,9 @@ export const completeSession = async (
     );
 
     // check if all participants have completed
-    const allCompleted = updatedParticipants?.every(p => p.status === 'completed');
+    const allCompleted = updatedParticipants?.every(
+      p => p.status === 'completed',
+    );
     if (allCompleted) {
       await updateDoc(sessionRef, {
         status: 'completed',
@@ -247,7 +266,10 @@ export const abandonSession = async (
       );
     }
   } else if (sessionData.sessionMode === 'group' && userId) {
-    await abandonGroupSession(sessionId, userId);const participant = sessionData.participants?.find(p => p.userId === userId);
+    await abandonGroupSession(sessionId, userId);
+    const participant = sessionData.participants?.find(
+      p => p.userId === userId,
+    );
     if (!participant) throw new Error('Participant not found');
 
     const groupSettings = sessionData.groupSettings;
@@ -261,10 +283,14 @@ export const abandonSession = async (
 
     let sessionUpdate: any = { participants: updatedParticipants };
 
-    if (groupSettings.requireAllToComplete && groupSettings.penaltyForQuitting.applyToAll) {
-      const affectedParticipants = sessionData.participants
-        ?.filter(p => p.userId !== userId && p.status === 'active')
-        .map(p => p.userId) || [];
+    if (
+      groupSettings.requireAllToComplete &&
+      groupSettings.penaltyForQuitting.applyToAll
+    ) {
+      const affectedParticipants =
+        sessionData.participants
+          ?.filter(p => p.userId !== userId && p.status === 'active')
+          .map(p => p.userId) || [];
 
       const consequences: GroupConsequences = {
         quitterUserId: userId,
@@ -274,12 +300,28 @@ export const abandonSession = async (
         consequenceReason: 'user_quit',
       };
 
-      
-      await applyGroupPenalties(null, affectedParticipants, userId, sessionData.sessionType, sessionData.duration, groupSettings.penaltyForQuitting.deadStarsGained);
+      await applyGroupPenalties(
+        null,
+        affectedParticipants,
+        userId,
+        sessionData.sessionType,
+        sessionData.duration,
+        groupSettings.penaltyForQuitting.deadStarsGained,
+      );
 
-      sessionUpdate = { ...sessionUpdate, status: 'cancelled', endTime: Timestamp.now(), consequences };
+      sessionUpdate = {
+        ...sessionUpdate,
+        status: 'cancelled',
+        endTime: Timestamp.now(),
+        consequences,
+      };
     } else {
-      await applyAbandonmentPenalty(null, userId, sessionData.sessionType, sessionData.duration);
+      await applyAbandonmentPenalty(
+        null,
+        userId,
+        sessionData.sessionType,
+        sessionData.duration,
+      );
     }
 
     await updateDoc(sessionRef, sessionUpdate);
@@ -402,7 +444,6 @@ export const acceptGroupInvitation = async (
   }
 };
 
-
 // decline group invitation
 export const declineGroupInvitation = async (
   sessionId: string,
@@ -428,6 +469,98 @@ export const declineGroupInvitation = async (
   );
 
   await updateDoc(sessionRef, { participants: updatedParticipants });
+};
+
+// Fixed fetchUserSessions function
+export const fetchUserSessions = async (
+  userId: string,
+): Promise<FocusSession[]> => {
+  const sessionsRef = collection(firestore, 'focusSessions');
+
+  // Query for solo sessions
+  const soloQuery = query(sessionsRef, where('userId', '==', userId));
+  const soloSnapshot = await getDocs(soloQuery);
+  const soloSessions = soloSnapshot.docs.map(doc => doc.data() as FocusSession);
+
+  // Query for group sessions where user is a participant
+  const groupQuery = query(
+    sessionsRef,
+    where('sessionMode', '==', 'group'),
+    where('participants', 'array-contains-any', [{ userId }]),
+  );
+
+  let groupSessions: FocusSession[] = [];
+  try {
+    const groupSnapshot = await getDocs(groupQuery);
+    groupSessions = groupSnapshot.docs
+      .map(doc => doc.data() as FocusSession)
+      .filter(session => session.participants?.some(p => p.userId === userId));
+  } catch (error) {
+    console.log('Group session query failed, using alternative approach');
+
+    // Fallback: get all group sessions and filter client-side
+    const allGroupQuery = query(
+      sessionsRef,
+      where('sessionMode', '==', 'group'),
+    );
+    const allGroupSnapshot = await getDocs(allGroupQuery);
+    groupSessions = allGroupSnapshot.docs
+      .map((doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => doc.data() as FocusSession)
+      .filter((session: FocusSession) => session.participants?.some(p => p.userId === userId));
+  }
+
+  return [...soloSessions, ...groupSessions];
+};
+
+export const aggregateSessionsByWeek = (
+  sessions: FocusSession[],
+  weeks = 18,
+) => {
+  const today = new Date();
+  const startDate = new Date();
+  startDate.setDate(today.getDate() - weeks * 7);
+
+  const dailyCounts: Record<string, number> = {};
+
+  sessions.forEach(session => {
+    // Convert Firestore Timestamp to JavaScript Date
+    const sessionDate =
+      session.createdAt instanceof Timestamp
+        ? session.createdAt.toDate()
+        : new Date(session.createdAt);
+
+    // Use local timezone for date string to avoid timezone issues
+    const year = sessionDate.getFullYear();
+    const month = String(sessionDate.getMonth() + 1).padStart(2, '0');
+    const day = String(sessionDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
+    dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
+  });
+
+  console.log('Daily counts:', dailyCounts); // Debug log
+
+  const data: number[][] = [];
+  for (let w = 0; w < weeks; w++) {
+    const week: number[] = [];
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(startDate);
+      day.setDate(startDate.getDate() + w * 7 + d);
+
+      // Use same date formatting as above
+      const year = day.getFullYear();
+      const month = String(day.getMonth() + 1).padStart(2, '0');
+      const dayNum = String(day.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${dayNum}`;
+
+      const count = dailyCounts[dateStr] || 0;
+      // Cap the count at 4 for heatmap visualization
+      week.push(Math.min(count, 4));
+    }
+    data.push(week);
+  }
+
+  return data;
 };
 
 // start group session
@@ -470,7 +603,11 @@ export const abandonGroupSession = async (
   ) {
     const affectedParticipants =
       sessionData.participants
-        ?.filter(p => p.userId !== userId && (p.status === 'active' || p.status === 'accepted'))
+        ?.filter(
+          p =>
+            p.userId !== userId &&
+            (p.status === 'active' || p.status === 'accepted'),
+        )
         .map(p => p.userId) || [];
 
     const consequences: GroupConsequences = {
@@ -481,7 +618,6 @@ export const abandonGroupSession = async (
       consequenceReason: 'user_quit',
     };
 
-  
     await applyGroupPenalties(
       null,
       [...affectedParticipants, userId],
