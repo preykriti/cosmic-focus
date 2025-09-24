@@ -13,7 +13,7 @@ interface FriendItemProps {
   onPress?: () => void;
 }
 
-export const FriendItem = ({ friend, onPress }: FriendItemProps) => {
+export default function FriendItem({ friend, onPress }: FriendItemProps) {
   return (
     <TouchableOpacity
       style={styles.friendItem}
