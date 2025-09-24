@@ -7,6 +7,8 @@ type StreakHeatmapProps = {
   getColor: (value: number) => string;
 };
 
+
+
 export default function StreakHeatmap({ data, getColor }: StreakHeatmapProps) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>

@@ -2,26 +2,20 @@ export const colors = {
   light: {
     primary: '#6366F1',
     secondary: '#8B5CF6',
-    //  primary: "#6366F1",
-    // secondary: "#8B5CF6",
     accent: '#06B6D4',
     background: '#ffffff80',
     surface: '#F8FAFC',
     card: '#FFFFFF',
+    mutedcard: '#fef3c7',
     text: '#1E293B',
     textSecondary: '#64748B',
     border: '#E2E8F0',
     success: '#10B981',
     warning: '#F59E0B',
     error: '#EF4444',
-
-    // gradientStart: "#6366F1",
     gradientStart: '#6366F1',
 
     gradientEnd: '#8B5CF6',
-    // gradientStart: '#7863f1ff',
-
-    // gradientEnd: '#8B5CF6',
   },
 
   dark: {
@@ -46,7 +40,7 @@ export const colors = {
   black: '#000000',
   transparent: 'transparent',
 
-  star: '#FFD700',
+  star: '#e7b325ff',
   deadStar: '#6B7280',
   blackHole: '#1F2937',
 };
