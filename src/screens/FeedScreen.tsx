@@ -23,10 +23,18 @@ import {
 } from '../store/slices/feedSlice';
 import CommentModal from '../components/feed/CommentModal';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { TabParamList } from '../types/navigation';
+import { MainStackParamList } from '../types/navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type FeedScreenNavigationProp = NativeStackNavigationProp<
+  MainStackParamList,
+  'Feed'
+>;
+type FeedScreenRouteProp = RouteProp<MainStackParamList, 'Feed'>;
+
 type FeedScreenProps = {
-  navigation: NavigationProp<TabParamList, 'Feed'>;
-  route: RouteProp<TabParamList, 'Feed'>;
+  navigation: FeedScreenNavigationProp;
+  route: FeedScreenRouteProp;
 };
 
 export default function FeedScreen({ navigation }: FeedScreenProps) {
@@ -58,19 +66,19 @@ export default function FeedScreen({ navigation }: FeedScreenProps) {
     }
   }, [dispatch, friendIds, initialLoad, userId]);
 
-  // const formatTimeAgo = (date: Date | null): string => {
-  //   if (!date) return 'Just now';
+  const formatTimeAgo = (date: Date | null): string => {
+    if (!date) return 'Just now';
 
-  //   const now = new Date();
-  //   const diffInHours = Math.floor(
-  //     (now.getTime() - date.getTime()) / (1000 * 60 * 60),
-  //   );
+    const now = new Date();
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
 
-  //   if (diffInHours < 1) return 'Just now';
-  //   if (diffInHours < 24) return `${diffInHours}h ago`;
-  //   const diffInDays = Math.floor(diffInHours / 24);
-  //   return `${diffInDays}d ago`;
-  // };
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
 
   const handleLike = (feed: Feed): void => {
     if (!userId) return;
