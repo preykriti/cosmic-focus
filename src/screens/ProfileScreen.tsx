@@ -13,12 +13,22 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logoutUser } from '../store/slices/authSlice';
 import { colors } from '../constants/colors';
 import LinearGradient from 'react-native-linear-gradient';
+import {
+  aggregateSessionsByWeek,
+  fetchUserSessions,
+} from '../firebase/firestore/focusSession';
 
 const { height } = Dimensions.get('window');
 
 export default function ProfileScreen({ navigation }: any) {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector(state => state.auth);
+  const user = useAppSelector(state => state.auth.user);
+  const stars = user?.stars ? user.stars : 0;
+  const streak = user?.streak ? user.streak : 0;
+  const minutes = user?.totalFocusMinutes ? user.totalFocusMinutes : 0;
+  const totalTaskDone = user?.totalTasksDone ? user.totalTasksDone : 0;
+  const totalPomodoro = user?.totalPomodoros ? user.totalPomodoros : 0;
+
   const [heatmapData, setHeatmapData] = useState<number[][]>([]);
 
   const getColor = (value: number) => {
@@ -39,25 +49,54 @@ export default function ProfileScreen({ navigation }: any) {
   };
 
   useEffect(() => {
-    const weeks = 18;
-    const days = 7;
-    const data: number[][] = [];
-    for (let w = 0; w < weeks; w++) {
-      const week: number[] = [];
-      for (let d = 0; d < days; d++) {
-        week.push(Math.floor(Math.random() * 5));
+    const loadHeatmapData = async () => {
+      if (!user?.id) {
+        console.log('No user ID available');
+        return;
       }
-      data.push(week);
-    }
-    setHeatmapData(data);
-  }, []);
 
+      try {
+        console.log('Fetching sessions for user:', user.id);
+        const sessions = await fetchUserSessions(user.id);
+        console.log('Fetched sessions:', sessions.length);
+        console.log(
+          'Sessions details:',
+          sessions.map(s => ({
+            id: s.id,
+            createdAt: s.createdAt,
+            sessionMode: s.sessionMode,
+            status: s.status,
+          })),
+        );
+
+        const data = aggregateSessionsByWeek(sessions, 18);
+        console.log('Heatmap data:', data);
+
+        // Check if today has any data
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        console.log('Today:', todayStr);
+
+        setHeatmapData(data);
+      } catch (error) {
+        console.error('Failed to load heatmap data:', error);
+      }
+    };
+
+    loadHeatmapData();
+  }, [user]);
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
     } catch (error: any) {
       console.log('Logout failed:', error.message);
     }
+  };
+
+  const convertMinutesToHour = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
   };
 
   return (
@@ -86,7 +125,7 @@ export default function ProfileScreen({ navigation }: any) {
                 color={colors.light.warning}
               />
             </View>
-            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statNumber}>{streak}</Text>
             <Text style={styles.statLabel}>Day Streak</Text>
           </View>
 
@@ -98,7 +137,7 @@ export default function ProfileScreen({ navigation }: any) {
                 color={colors.light.warning}
               />
             </View>
-            <Text style={styles.statNumber}>340</Text>
+            <Text style={styles.statNumber}>{stars}</Text>
             <Text style={styles.statLabel}>Stars</Text>
           </View>
 
@@ -110,7 +149,9 @@ export default function ProfileScreen({ navigation }: any) {
                 color={colors.light.warning}
               />
             </View>
-            <Text style={styles.statNumber}>42h</Text>
+            <Text style={styles.statNumber}>
+              {convertMinutesToHour(minutes)}
+            </Text>
             <Text style={styles.statLabel}>Focus Hours</Text>
           </View>
         </View>
@@ -124,11 +165,11 @@ export default function ProfileScreen({ navigation }: any) {
         <Text style={styles.sectionTitle}>Progress Overview</Text>
         <View style={styles.statsRow}>
           <View style={styles.progressStat}>
-            <Text style={styles.progressNumber}>128</Text>
+            <Text style={styles.progressNumber}>{totalTaskDone}</Text>
             <Text style={styles.progressLabel}>Tasks Done</Text>
           </View>
           <View style={styles.progressStat}>
-            <Text style={styles.progressNumber}>256</Text>
+            <Text style={styles.progressNumber}>{totalPomodoro}</Text>
             <Text style={styles.progressLabel}>Pomodoros</Text>
           </View>
         </View>
