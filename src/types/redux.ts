@@ -32,4 +32,5 @@ export type UserProfile = {
   totalTasksDone?: number;
   totalPomodoros?: number;
   createdAt?: Timestamp | null;
+  purchases?: string[];
 };
