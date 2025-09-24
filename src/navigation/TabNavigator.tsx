@@ -8,7 +8,6 @@ import ReportScreen from '../screens/ReportScreen';
 import TasksScreen from '../screens/TasksScreen';
 import { colors } from '../constants/colors';
 import { TabParamList } from '../types/navigation';
-import FeedScreen from '../screens/FeedScreen';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -62,7 +61,7 @@ export default function TabNavigator() {
       <Tab.Screen name="Friends" component={FriendsScreen} />
       <Tab.Screen name="Report" component={ReportScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Feed" component={FeedScreen} />
+     
     </Tab.Navigator>
   );
 }

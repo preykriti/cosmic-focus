@@ -1,5 +1,3 @@
-import { Task } from './task';
-
 export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
@@ -20,21 +18,11 @@ export type MainStackParamList = {
     isGroupSession?: boolean;
     groupSessionId?: string;
   };
-  GroupSessionSetup: undefined;
-  GroupLobby: {
-    sessionId: string;
-    selectedFriends: string[];
-    pomodoroLength: '25/5' | '50/10';
-    hostUser: {
-      id: string;
-      username: string;
-      email: string;
-    };
-  };
   Lobby: {
     sessionId: string;
   };
-  
+  Feed: undefined;
+  Shop: undefined;
 };
 
 export type TabParamList = {
@@ -43,5 +31,4 @@ export type TabParamList = {
   Report: undefined;
   Profile: undefined;
   Tasks: undefined;
-  Feed: undefined;
 };
