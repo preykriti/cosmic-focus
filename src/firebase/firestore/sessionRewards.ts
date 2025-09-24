@@ -4,6 +4,7 @@ import {
   updateDoc,
   Timestamp,
   increment,
+  runTransaction,
 } from '@react-native-firebase/firestore';
 
 const firestore = getFirestore();
@@ -69,20 +70,27 @@ export const updateUserStatsForCompletion = async (
   const starsEarned = calculateStars(sessionType, duration);
   const focusMinutes = Math.floor(duration / 60);
 
-  const userRef = doc(firestore, 'users', userId);
-  await updateDoc(userRef, {
-    stars: increment(starsEarned),
-    totalFocusMinutes: increment(focusMinutes),
-    totalPomodoros: increment(1),
-    lastPomodoroDate: Timestamp.now(),
-  });
+  try {
+    await runTransaction(firestore, async (transaction) => {
+      const userRef = doc(firestore, 'users', userId);
+      transaction.update(userRef, {
+        stars: increment(starsEarned),
+        totalFocusMinutes: increment(focusMinutes),
+        totalPomodoros: increment(1),
+        lastPomodoroDate: Timestamp.now(),
+      });
 
-  if (taskId) {
-    const taskRef = doc(firestore, 'tasks', taskId);
-    await updateDoc(taskRef, {
-      completedPomodoros: increment(1),
-      updatedAt: Timestamp.now(),
+      if (taskId) {
+        const taskRef = doc(firestore, 'tasks', taskId);
+        transaction.update(taskRef, {
+          completedPomodoros: increment(1),
+          updatedAt: Timestamp.now(),
+        });
+      }
     });
+  } catch (error) {
+    console.error('Failed to update user stats:', error);
+    throw error;
   }
 };
 
@@ -94,10 +102,15 @@ export const applyAbandonmentPenalty = async (
 ): Promise<void> => {
   const deadStarsToAdd = calculateDeadStars(sessionType, duration);
   if (deadStarsToAdd > 0) {
-    const userRef = doc(firestore, 'users', userId);
-    await updateDoc(userRef, {
-      deadStars: increment(deadStarsToAdd),
-    });
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        const userRef = doc(firestore, 'users', userId);
+        await updateDeadStarsAndBlackHoles(transaction, userRef, deadStarsToAdd);
+      });
+    } catch (error) {
+      console.error('Failed to apply abandonment penalty:', error);
+      throw error;
+    }
   }
 };
 
@@ -109,12 +122,15 @@ export const applyGroupPenalties = async (
   duration: number,
   penaltyAmount: number,
 ): Promise<void> => {
-  for (const participantId of affectedParticipants) {
-    const userRef = doc(firestore, 'users', participantId);
-    await updateDoc(userRef, {
-      deadStars: increment(penaltyAmount),
+  try {
+    await runTransaction(firestore, async (transaction) => {
+      for (const participantId of affectedParticipants) {
+        const userRef = doc(firestore, 'users', participantId);
+        await updateDeadStarsAndBlackHoles(transaction, userRef, penaltyAmount);
+      }
     });
+  } catch (error) {
+    console.error('Failed to apply group penalties:', error);
+    throw error;
   }
-
-  await applyAbandonmentPenalty(null, quitterId, sessionType, duration);
 };

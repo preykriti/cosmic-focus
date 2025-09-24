@@ -36,6 +36,7 @@ export default function TasksScreen() {
         plannedPomodoros: task.plannedPomodoros,
       },
       autoStartNext: autoStart,
+      isGroupSession: false,
     });
   };
 

@@ -6,6 +6,7 @@ import { getAuth } from "@react-native-firebase/auth";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setUser, setInitializing } from "../store/slices/authSlice";
 import * as usersService from '../firebase/firestore/users';
+import { backgroundInviteListener } from "../services/backgroundInviteListener";
 
 const AuthListener = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch();
@@ -26,6 +27,7 @@ const AuthListener = ({ children }: { children: React.ReactNode }) => {
       }
     } else {
       dispatch(setUser(null));
+      backgroundInviteListener.stopListening();
     }
 
     dispatch(setInitializing(false));

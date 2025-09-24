@@ -41,6 +41,7 @@ export const createUserProfile = async (
     totalFocusMinutes: 0,
     totalTasksDone: 0,
     totalPomodoros: 0,
+    fcmToken: null,
     createdAt: Timestamp.now(),
   });
 };
@@ -92,4 +93,13 @@ export const searchUsersByUsername = async (searchTerm: string) => {
       username: data.username,
     };
   });
+};
+
+export const updateUserFcmToken = async (userId: string, token: string) => {
+  if (!userId || !token) return;
+  await setDoc(
+    doc(firestore, 'users', userId),
+    { fcmToken: token, updatedAt: Timestamp.now() },
+    { merge: true },
+  );
 };
