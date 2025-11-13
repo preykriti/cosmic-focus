@@ -107,7 +107,8 @@ export default function ReportScreen() {
     if (activeTab === 'daily') {
       return data.map((item: DailyStats) => {
         const date = new Date(item.date);
-        return date.toLocaleDateString('en-US', { weekday: 'short' });
+        date.setDate(date.getDate() + 1);
+        return date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
       });
     } else if (activeTab === 'weekly') {
       return data.map((item: WeeklyStats, index: number) => `W${index + 1}`);
@@ -127,11 +128,13 @@ export default function ReportScreen() {
       case 'daily':
         if ('date' in latestPeriod) {
           const date = new Date((latestPeriod as DailyStats).date);
+          date.setDate(date.getDate() + 1);
           return date.toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
-            day: 'numeric' 
+            day: 'numeric' ,
+            timeZone: 'UTC',
           });
         }
         break;
@@ -293,6 +296,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.light.background,
     padding: 16,
+    marginBottom: 50,
   },
   centerContainer: {
     flex: 1,
@@ -302,9 +306,10 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.light.text,
     marginBottom: 4,

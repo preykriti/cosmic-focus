@@ -4,7 +4,7 @@ import { colors } from '../constants/colors';
 export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.backgroundDark,
+    backgroundColor: colors.light.background,
     gap: 20,
     paddingHorizontal: 10,
     paddingVertical: 14,

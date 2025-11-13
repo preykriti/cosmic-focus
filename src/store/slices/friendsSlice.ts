@@ -53,14 +53,7 @@ export const fetchIncomingRequests = createAsyncThunk(
 
 export const fetchFriends = createAsyncThunk(
   'friends/fetchFriends',
-  async (userId: string, { getState }) => {
-    const state = getState() as RootState;
-
-    // no refetching if already loaded
-    if (state.friends.friends.length > 0) {
-      return state.friends.friends;
-    }
-
+  async (userId: string) => {
     return await friendsService.getFriendsWithProfiles(userId);
   },
 );
