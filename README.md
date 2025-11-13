@@ -5,6 +5,12 @@ It helps users manage tasks, track their progress, and grow their own galaxy of 
 
 ---
 
+## Download the App
+
+🔗 [Download Cosmic Focus APK (v1.0.0)](https://github.com/preykriti/cosmic-focus/releases/latest)
+
+---
+
 ## Features
 
 ### Productivity
