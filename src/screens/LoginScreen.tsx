@@ -18,6 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../types/navigation';
 import { getFcmToken } from '../firebase/notifications/messaging';
 import { updateUserFcmToken } from '../firebase/firestore/users';
+import { backgroundInviteListener } from '../services/backgroundInviteListener';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   AuthStackParamList,
@@ -49,6 +50,10 @@ export default function LoginScreen({ navigation }: Props) {
       const token = await getFcmToken();
       if(token && result?.user?.id) {
         await updateUserFcmToken(result.user.id, token);
+      }
+      backgroundInviteListener.stopListening();
+      if (result?.user?.id) {
+        backgroundInviteListener.startListening(result.user.id);
       }
     } catch (e) {
     } finally {

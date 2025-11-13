@@ -47,7 +47,6 @@ export default function PomodoroScreen() {
     groupSessionId,
   } = route.params;
 
-  // Determine the task to use
   const getSessionTask = () => {
     if (isGroupSession) {
       return null;
@@ -209,7 +208,7 @@ export default function PomodoroScreen() {
           </Text>
         </View>
       </View>
-
+{/* 
       {isGroupSession && participants.length > 0 && (
         <View style={styles.participantsContainer}>
           <Text style={styles.participantsTitle}>Participants</Text>
@@ -222,7 +221,7 @@ export default function PomodoroScreen() {
             contentContainerStyle={styles.participantsList}
           />
         </View>
-      )}
+      )} */}
 
       <View style={styles.cycleProgress}>
         <Text style={styles.cycleText}>
@@ -249,7 +248,6 @@ export default function PomodoroScreen() {
       </View>
 
       <View style={styles.controlsContainer}>
-        {/* Only show start button when not running */}
         {!isRunning && (
           <TouchableOpacity
             style={[
@@ -305,7 +303,7 @@ export default function PomodoroScreen() {
       <Modal
         visible={challengeModeVisible}
         animationType="slide"
-        transparent={true} // <-- make modal background transparent
+        transparent={true} 
         onRequestClose={() => setChallengeModeVisible(false)}
       >
         <View style={styles.modalOverlay}>

@@ -1,6 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { View, Dimensions } from 'react-native';
-import { Canvas, Rect, Circle } from '@shopify/react-native-skia';
+import {
+  Canvas,
+  Rect,
+  Circle,
+  useImage,
+  Image as SkiaImage,
+  Paint,
+  BlurMask,
+} from '@shopify/react-native-skia';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -9,6 +17,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { useAppSelector } from '../../store/hooks';
+import { planetsData } from '../../constants/shopData';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,11 +29,22 @@ interface Star {
 }
 
 const StarCanvas = () => {
-  const user = useAppSelector((state) => state.auth.user);
+  const user = useAppSelector(state => state.auth.user);
 
   const starsCount = user?.stars ?? 0;
   const deadStarsCount = user?.deadStars ?? 0;
   const blackholesCount = user?.blackholes ?? 0;
+  const purchasedPlanetIds = user?.purchases ?? [];
+
+  const planetImages = planetsData.map(planet => ({
+    ...planet,
+    skiaImage: useImage(planet.asset),
+  }));
+  const purchasedPlanetsWithImages = useMemo(() => {
+    return planetImages.filter(
+      planet => purchasedPlanetIds.includes(planet.id) && planet.skiaImage,
+    );
+  }, [purchasedPlanetIds, planetImages]);
 
   const [starsBounds, setStarsBounds] = useState({
     minX: 0,
@@ -88,21 +108,40 @@ const StarCanvas = () => {
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
 
-  const calculateInitialScale = () => {
-    const starsWidth = starsBounds.maxX - starsBounds.minX;
-    const starsHeight = starsBounds.maxY - starsBounds.minY;
-    if (starsWidth > 0 && starsHeight > 0) {
-      return Math.min(width / starsWidth, height / starsHeight, 1);
-    }
-    return 1;
+  const clampTranslation = (
+    translateX: number,
+    translateY: number,
+    scale: number,
+  ) => {
+    'worklet';
+    const scaledWidth = canvasWidth * scale;
+    const scaledHeight = canvasHeight * scale;
+
+    // to keep canvas centered
+    const maxX = Math.max(0, (scaledWidth - width) / 2);
+    const minX = -maxX;
+    const maxY = Math.max(0, (scaledHeight - height) / 2);
+    const minY = -maxY;
+
+    return {
+      x: Math.max(minX, Math.min(maxX, translateX)),
+      y: Math.max(minY, Math.min(maxY, translateY)),
+    };
   };
 
   useEffect(() => {
     if (starsBounds.maxX > 0 && starsBounds.maxY > 0) {
-      const initialScale = calculateInitialScale();
+      const starsWidth = starsBounds.maxX - starsBounds.minX;
+      const starsHeight = starsBounds.maxY - starsBounds.minY;
+      const initialScale =
+        starsWidth > 0 && starsHeight > 0
+          ? Math.min(width / starsWidth, height / starsHeight, 1)
+          : 1;
+
       const starsCenterX = (starsBounds.minX + starsBounds.maxX) / 2;
       const starsCenterY = (starsBounds.minY + starsBounds.maxY) / 2;
 
+      // Center the stars in the screen
       let initialTranslateX = width / 2 - starsCenterX * initialScale;
       let initialTranslateY = height / 2 - starsCenterY * initialScale;
 
@@ -124,20 +163,13 @@ const StarCanvas = () => {
       savedTranslateX.value = translateX.value;
       savedTranslateY.value = translateY.value;
     })
-    .onUpdate((event) => {
+    .onUpdate(event => {
       const newX = savedTranslateX.value + event.translationX;
       const newY = savedTranslateY.value + event.translationY;
 
-      const scaledWidth = canvasWidth * scale.value;
-      const scaledHeight = canvasHeight * scale.value;
-
-      const minX = Math.min(0, width - scaledWidth);
-      const maxX = 0;
-      const minY = Math.min(0, height - scaledHeight);
-      const maxY = 0;
-
-      translateX.value = Math.max(minX, Math.min(maxX, newX));
-      translateY.value = Math.max(minY, Math.min(maxY, newY));
+      const clamped = clampTranslation(newX, newY, scale.value);
+      translateX.value = clamped.x;
+      translateY.value = clamped.y;
     });
 
   // pinch gesture
@@ -147,28 +179,18 @@ const StarCanvas = () => {
       savedTranslateX.value = translateX.value;
       savedTranslateY.value = translateY.value;
     })
-    .onUpdate((event) => {
+    .onUpdate(event => {
       let newScale = savedScale.value * event.scale;
       newScale = Math.max(0.1, Math.min(5, newScale));
 
       scale.value = newScale;
 
-      const scaledWidth = canvasWidth * newScale;
-      const scaledHeight = canvasHeight * newScale;
+      const newX = savedTranslateX.value * (newScale / savedScale.value);
+      const newY = savedTranslateY.value * (newScale / savedScale.value);
 
-      const minX = Math.min(0, width - scaledWidth);
-      const maxX = 0;
-      const minY = Math.min(0, height - scaledHeight);
-      const maxY = 0;
-
-      translateX.value = Math.max(
-        minX,
-        Math.min(maxX, savedTranslateX.value * (newScale / savedScale.value)),
-      );
-      translateY.value = Math.max(
-        minY,
-        Math.min(maxY, savedTranslateY.value * (newScale / savedScale.value)),
-      );
+      const clamped = clampTranslation(newX, newY, newScale);
+      translateX.value = clamped.x;
+      translateY.value = clamped.y;
     })
     .onEnd(() => {
       if (scale.value < 0.3) scale.value = withSpring(0.3);
@@ -178,50 +200,34 @@ const StarCanvas = () => {
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
     .onEnd(() => {
-      const fitScale = calculateInitialScale();
+      const starsWidth = starsBounds.maxX - starsBounds.minX;
+      const starsHeight = starsBounds.maxY - starsBounds.minY;
+      const fitScale =
+        starsWidth > 0 && starsHeight > 0
+          ? Math.min(width / starsWidth, height / starsHeight, 1)
+          : 1;
+
       const starsCenterX = (starsBounds.minX + starsBounds.maxX) / 2;
       const starsCenterY = (starsBounds.minY + starsBounds.maxY) / 2;
 
       const initialTranslateX = width / 2 - starsCenterX * fitScale;
       const initialTranslateY = height / 2 - starsCenterY * fitScale;
 
-      const clampedX = Math.max(
-        Math.min(initialTranslateX, 0),
-        width - canvasWidth * fitScale,
-      );
-      const clampedY = Math.max(
-        Math.min(initialTranslateY, 0),
-        height - canvasHeight * fitScale,
+      const clamped = clampTranslation(
+        initialTranslateX,
+        initialTranslateY,
+        fitScale,
       );
 
       scale.value = withSpring(fitScale);
-      translateX.value = withSpring(clampedX);
-      translateY.value = withSpring(clampedY);
+      translateX.value = withSpring(clamped.x);
+      translateY.value = withSpring(clamped.y);
     });
 
   const composedGesture = Gesture.Simultaneous(
     panGesture,
     Gesture.Exclusive(pinchGesture, doubleTapGesture),
   );
-
-  const clampTranslation = (
-    translateX: number,
-    translateY: number,
-    scale: number,
-  ) => {
-    const scaledWidth = canvasWidth * scale;
-    const scaledHeight = canvasHeight * scale;
-
-    const maxX = Math.max(0, (scaledWidth - width) / 2);
-    const minX = -maxX;
-    const maxY = Math.max(0, (scaledHeight - height) / 2);
-    const minY = -maxY;
-
-    return {
-      x: Math.max(minX, Math.min(maxX, translateX)),
-      y: Math.max(minY, Math.min(maxY, translateY)),
-    };
-  };
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -233,17 +239,22 @@ const StarCanvas = () => {
     };
   });
 
+  const canvasStyle = useMemo(() => {
+    return {
+      width: canvasWidth,
+      height: canvasHeight,
+      backgroundColor: 'black',
+      position: 'absolute' as const,
+      left: (width - canvasWidth) / 2,
+      top: (height - canvasHeight) / 2,
+    };
+  }, [canvasWidth, canvasHeight]);
+
   return (
     <View style={{ flex: 1, backgroundColor: 'black', overflow: 'hidden' }}>
       <GestureDetector gesture={composedGesture}>
         <Animated.View style={[{ width, height }, animatedStyle]}>
-          <Canvas
-            style={{
-              width: canvasWidth,
-              height: canvasHeight,
-              backgroundColor: 'black',
-            }}
-          >
+          <Canvas style={canvasStyle}>
             {/* background */}
             <Rect
               x={0}
@@ -255,29 +266,53 @@ const StarCanvas = () => {
 
             {/* Render stars */}
             {stars.map((star, idx) => {
-              if (star.type === 'blackhole') {
-                return (
+              const color =
+                star.type === 'star'
+                  ? 'white'
+                  : star.type === 'deadStar'
+                  ? 'gray'
+                  : star.type === 'blackhole'
+                  ? 'purple'
+                  : 'white';
+
+              return (
+                <React.Fragment key={idx}>
                   <Circle
-                    key={idx}
+                    cx={star.x}
+                    cy={star.y}
+                    r={star.radius * 2}
+                    color={color}
+                    opacity={0.3}
+                  >
+                    <BlurMask blur={star.radius * 2} style="normal" />
+                  </Circle>
+
+                  {/* Main star */}
+                  <Circle
                     cx={star.x}
                     cy={star.y}
                     r={star.radius}
-                    color="purple"
+                    color={color}
                   />
-                );
-              }
+                </React.Fragment>
+              );
+            })}
 
-              const color =
-                star.type === 'star' ? 'white' : star.type === 'deadStar' ? 'gray' : 'white';
+            {/* Render purchased planets */}
+            {purchasedPlanetsWithImages.map((planet, idx) => {
+              const x = 1000 + idx * 400;
+              const y = 800 + idx * 400;
+              const size = 150;
 
               return (
-                <Rect
-                  key={idx}
-                  x={star.x - star.radius}
-                  y={star.y - star.radius}
-                  width={star.radius * 2}
-                  height={star.radius * 2}
-                  color={color}
+                <SkiaImage
+                  key={planet.id}
+                  image={planet.skiaImage}
+                  x={x}
+                  y={y}
+                  width={size}
+                  height={size}
+                  fit="contain"
                 />
               );
             })}

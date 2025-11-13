@@ -179,14 +179,10 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.light.card,
     borderRadius: 16,
-    marginBottom: 26,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: colors.light.border,
     elevation: 2,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
     flexDirection: 'row',
   },
   priorityStrip: {

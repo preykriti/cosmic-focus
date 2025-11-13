@@ -79,6 +79,9 @@ export default function ChartContainer({
             withVerticalLines={false}
             withHorizontalLines={true}
             fromZero={true}
+            verticalLabelRotation={0}
+            formatYLabel={(y) => `${y}`}
+              segments={5}
           />
         ) : (
           <BarChart
@@ -114,15 +117,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 3,
     alignItems: 'center',
+    overflow: 'hidden',
   },
   chart: {
     borderRadius: 16,
+    marginLeft: -24,
   },
   emptyState: {
     backgroundColor: colors.white,

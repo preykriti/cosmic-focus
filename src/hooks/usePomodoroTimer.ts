@@ -8,9 +8,11 @@ import {
   doc,
   onSnapshot,
   serverTimestamp,
+  Timestamp,
 } from '@react-native-firebase/firestore';
 import { getFirestore } from '@react-native-firebase/firestore';
-import { getUser } from '../store/slices/authSlice';
+import { getUser, updateUser } from '../store/slices/authSlice';
+import { createFeed } from '../store/slices/feedSlice';
 import { applyAbandonmentPenalty } from '../firebase/firestore/sessionRewards';
 
 export interface PomodoroHookParams {
@@ -22,6 +24,10 @@ export interface PomodoroHookParams {
   breakLength: number;
   plannedPomodoros: number;
 }
+
+// Constants for feed posting thresholds
+const starsPost = 10;
+const streakPost = 2;
 
 export const usePomodoroTimer = ({
   sessionTask,
@@ -54,12 +60,42 @@ export const usePomodoroTimer = ({
   const [isLoading, setIsLoading] = useState(
     isGroupSession && groupSessionId ? true : false,
   );
-  const [time, setTime] = useState(25 * 60);
+  const [time, setTime] = useState(pomodoroLength * 60);
 
   // Refs
   const timerRef = useRef<number | null>(null);
   const orbitAnim = useRef(new Animated.Value(0)).current;
   const autoStartTimeoutRef = useRef<number | null>(null);
+
+  // Date helper functions from your friend's code
+  const isToday = (firestoreTimestamp: any) => {
+    if (!firestoreTimestamp) return false;
+
+    // Convert Firestore Timestamp to JS Date
+    const date = firestoreTimestamp.toDate();
+    const today = new Date();
+
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const isYesterday = (firestoreTimestamp: any) => {
+    if (!firestoreTimestamp) return false;
+
+    const date = firestoreTimestamp.toDate();
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    return (
+      date.getDate() === yesterday.getDate() &&
+      date.getMonth() === yesterday.getMonth() &&
+      date.getFullYear() === yesterday.getFullYear()
+    );
+  };
 
   // Utility functions
   const formatTime = (seconds: number) => {
@@ -151,7 +187,7 @@ export const usePomodoroTimer = ({
       const { quitterUsername, quitterUserId, affectedParticipants } =
         sessionData.consequences;
 
-      // Apply penalty to current user if they're affected and not the quitter
+      // apply penalty
       if (
         user &&
         affectedParticipants.includes(user.id) &&
@@ -171,13 +207,12 @@ export const usePomodoroTimer = ({
       }
 
       Alert.alert(
-        'Session Ended',
-        `${quitterUsername} abandoned the session. All participants receive 1 dead star penalty.`,
+        'Session Failed',
+        'A participant abandoned the session.',
         [
           {
             text: 'OK',
             onPress: () => {
-              // Refresh user data to show updated dead stars/blackholes
               if (user) {
                 dispatch(getUser({ userId: user.id }));
               }
@@ -215,8 +250,95 @@ export const usePomodoroTimer = ({
       await focusSessionService.completeSession(currentSessionId, user.id);
       dispatch(getUser({ userId: user.id }));
 
+      // Calculate stars earned
       const starsEarned =
         sessionType === 'pomodoro' ? (pomodoroLength === 25 ? 5 : 10) : 0;
+
+      // Handle streak and feed logic for pomodoro sessions only
+      if (sessionType === 'pomodoro') {
+        if (!user.lastPomodoroDate) {
+          // First pomodoro ever - set streak to 1
+          dispatch(
+            updateUser({
+              userId: user.id,
+              data: {
+                streak: 1,
+              },
+            }),
+          );
+        } else if (isToday(user.lastPomodoroDate)) {
+          console.log('its today');
+          // Same day - check for stars milestone
+          if (user.stars && (user.stars + starsEarned) % starsPost === 0) {
+            await dispatch(
+              createFeed({
+                userId: user.id,
+                type: 'stars',
+                amount: user.stars + starsEarned,
+                message: 'Making my Galaxy full of stars!!',
+              }),
+            ).unwrap();
+          }
+        } else if (isYesterday(user.lastPomodoroDate)) {
+          // Yesterday - increment streak and check milestones
+          const newStreak = (user.streak || 0) + 1;
+
+          // Check streak milestone
+          if (newStreak % streakPost === 1) {
+            await dispatch(
+              createFeed({
+                userId: user.id,
+                type: 'days',
+                amount: newStreak,
+                message: 'Another day, another step toward greatness!',
+              }),
+            ).unwrap();
+          }
+
+          // Check stars milestone
+          if (user.stars && (user.stars + starsEarned) % starsPost === 0) {
+            await dispatch(
+              createFeed({
+                userId: user.id,
+                type: 'stars',
+                amount: user.stars + starsEarned,
+                message: 'Making my Galaxy full of stars!!',
+              }),
+            ).unwrap();
+          }
+
+          // Update streak
+          dispatch(
+            updateUser({
+              userId: user.id,
+              data: {
+                streak: newStreak,
+              },
+            }),
+          );
+        } else {
+          // More than 1 day gap - reset streak to 1 and check stars milestone
+          if (user.stars && (user.stars + starsEarned) % starsPost === 0) {
+            await dispatch(
+              createFeed({
+                userId: user.id,
+                type: 'stars',
+                amount: user.stars + starsEarned,
+                message: 'Making my Galaxy full of stars!!',
+              }),
+            ).unwrap();
+          }
+
+          dispatch(
+            updateUser({
+              userId: user.id,
+              data: {
+                streak: 1,
+              },
+            }),
+          );
+        }
+      }
 
       setLastCompletedStars(starsEarned);
       setShowCompleteModal(true);
@@ -259,11 +381,13 @@ export const usePomodoroTimer = ({
                 currentSessionId,
                 user.id,
               );
+              dispatch(getUser({ userId: user.id }));
             } else {
               await focusSessionService.abandonSession(
                 currentSessionId,
                 user.id,
               );
+              dispatch(getUser({ userId: user.id }));
             }
             navigation.goBack();
           } catch (error) {
@@ -294,7 +418,9 @@ export const usePomodoroTimer = ({
     // Stop timer if running
     if (timerRef.current) {
       BackgroundTimer.clearInterval(timerRef.current);
-      timerRef.current = null;
+    }
+    if (autoStartTimeoutRef.current) {
+      BackgroundTimer.clearTimeout(autoStartTimeoutRef.current);
     }
     navigation.goBack();
   };
@@ -343,7 +469,7 @@ export const usePomodoroTimer = ({
         ) {
           console.log('Session is active, starting timer...');
 
-          const sessionDuration = sessionData.duration || 25 * 60;
+          const sessionDuration = pomodoroLength * 60;
 
           if (!isRunning) {
             if (sessionData.startTime) {
@@ -391,23 +517,19 @@ export const usePomodoroTimer = ({
     );
 
     return unsubscribe;
-  }, [isGroupSession, groupSessionId, isRunning, navigation]);
+  }, [isGroupSession, groupSessionId, isRunning, navigation, pomodoroLength]);
 
-  // Background timer logic - this is the key change!
+  // Background timer logic
   useEffect(() => {
     if (isRunning && time > 0) {
-      // Use BackgroundTimer instead of regular setInterval
       timerRef.current = BackgroundTimer.setInterval(() => {
         setTime(prev => {
           const newTime = prev - 1;
-          // Check if timer completed
           if (newTime <= 0) {
-            // Clear the timer
             if (timerRef.current) {
               BackgroundTimer.clearInterval(timerRef.current);
               timerRef.current = null;
             }
-            // Complete session
             handleSessionComplete();
             return 0;
           }
@@ -491,7 +613,6 @@ export const usePomodoroTimer = ({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Stop all background timers when component unmounts
       if (timerRef.current) {
         BackgroundTimer.clearInterval(timerRef.current);
       }

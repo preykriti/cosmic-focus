@@ -71,7 +71,7 @@ export const updateUserStatsForCompletion = async (
   const focusMinutes = Math.floor(duration / 60);
 
   try {
-    await runTransaction(firestore, async (transaction) => {
+    await runTransaction(firestore, async transaction => {
       const userRef = doc(firestore, 'users', userId);
       transaction.update(userRef, {
         stars: increment(starsEarned),
@@ -103,9 +103,13 @@ export const applyAbandonmentPenalty = async (
   const deadStarsToAdd = calculateDeadStars(sessionType, duration);
   if (deadStarsToAdd > 0) {
     try {
-      await runTransaction(firestore, async (transaction) => {
+      await runTransaction(firestore, async transaction => {
         const userRef = doc(firestore, 'users', userId);
-        await updateDeadStarsAndBlackHoles(transaction, userRef, deadStarsToAdd);
+        await updateDeadStarsAndBlackHoles(
+          transaction,
+          userRef,
+          deadStarsToAdd,
+        );
       });
     } catch (error) {
       console.error('Failed to apply abandonment penalty:', error);
@@ -113,7 +117,6 @@ export const applyAbandonmentPenalty = async (
     }
   }
 };
-
 export const applyGroupPenalties = async (
   _transaction: any,
   affectedParticipants: string[],
@@ -122,13 +125,23 @@ export const applyGroupPenalties = async (
   duration: number,
   penaltyAmount: number,
 ): Promise<void> => {
+  console.log(`Applying group penalties:`, {
+    affectedParticipants,
+    quitterId,
+    sessionType,
+    penaltyAmount,
+  });
+
   try {
-    await runTransaction(firestore, async (transaction) => {
+    await runTransaction(firestore, async transaction => {
       for (const participantId of affectedParticipants) {
+        console.log(`Applying penalty to user: ${participantId}`);
         const userRef = doc(firestore, 'users', participantId);
         await updateDeadStarsAndBlackHoles(transaction, userRef, penaltyAmount);
       }
     });
+
+    console.log('Group penalties applied successfully');
   } catch (error) {
     console.error('Failed to apply group penalties:', error);
     throw error;
