@@ -169,7 +169,6 @@ export const createFocusSession = async (
   }
 };
 
-// complete session
 export const completeSession = async (
   sessionId: string,
   userId: string,
@@ -196,7 +195,6 @@ export const completeSession = async (
       );
     }
   } else {
-    // group session
     const participant = sessionData.participants?.find(
       p => p.userId === userId,
     );
@@ -226,7 +224,6 @@ export const completeSession = async (
       participant.taskId,
     );
 
-    // check if all participants have completed
     const allCompleted = updatedParticipants?.every(
       p => p.status === 'completed',
     );
@@ -240,7 +237,6 @@ export const completeSession = async (
   }
 };
 
-// abandon session
 export const abandonSession = async (
   sessionId: string,
   userId?: string,
@@ -267,68 +263,9 @@ export const abandonSession = async (
     }
   } else if (sessionData.sessionMode === 'group' && userId) {
     await abandonGroupSession(sessionId, userId);
-    const participant = sessionData.participants?.find(
-      p => p.userId === userId,
-    );
-    if (!participant) throw new Error('Participant not found');
-
-    const groupSettings = sessionData.groupSettings;
-    if (!groupSettings) throw new Error('Group settings not found');
-
-    const updatedParticipants = sessionData.participants?.map(p =>
-      p.userId === userId
-        ? { ...p, status: 'abandoned' as const, abandonedAt: Timestamp.now() }
-        : p,
-    );
-
-    let sessionUpdate: any = { participants: updatedParticipants };
-
-    if (
-      groupSettings.requireAllToComplete &&
-      groupSettings.penaltyForQuitting.applyToAll
-    ) {
-      const affectedParticipants =
-        sessionData.participants
-          ?.filter(p => p.userId !== userId && p.status === 'active')
-          .map(p => p.userId) || [];
-
-      const consequences: GroupConsequences = {
-        quitterUserId: userId,
-        quitterUsername: participant.username,
-        penaltyApplied: true,
-        affectedParticipants,
-        consequenceReason: 'user_quit',
-      };
-
-      await applyGroupPenalties(
-        null,
-        affectedParticipants,
-        userId,
-        sessionData.sessionType,
-        sessionData.duration,
-        groupSettings.penaltyForQuitting.deadStarsGained,
-      );
-
-      sessionUpdate = {
-        ...sessionUpdate,
-        status: 'cancelled',
-        endTime: Timestamp.now(),
-        consequences,
-      };
-    } else {
-      await applyAbandonmentPenalty(
-        null,
-        userId,
-        sessionData.sessionType,
-        sessionData.duration,
-      );
-    }
-
-    await updateDoc(sessionRef, sessionUpdate);
   }
 };
 
-// join group session
 export const joinGroupSession = async (
   sessionId: string,
   userId: string,
@@ -361,7 +298,6 @@ export const joinGroupSession = async (
   });
 };
 
-// get session
 export const getSession = async (
   sessionId: string,
 ): Promise<FocusSession | null> => {
@@ -371,7 +307,6 @@ export const getSession = async (
   return sessionSnap.data() as FocusSession;
 };
 
-// update session status
 export const updateSessionStatus = async (
   sessionId: string,
   status: 'active' | 'completed' | 'abandoned' | 'cancelled',
@@ -390,7 +325,6 @@ export const checkGroupSessionCompletion = (session: FocusSession): boolean => {
     .every(p => p.status === 'completed');
 };
 
-// accept group invitation
 export const acceptGroupInvitation = async (
   sessionId: string,
   userId: string,
@@ -444,7 +378,6 @@ export const acceptGroupInvitation = async (
   }
 };
 
-// decline group invitation
 export const declineGroupInvitation = async (
   sessionId: string,
   userId: string,
@@ -471,34 +404,17 @@ export const declineGroupInvitation = async (
   await updateDoc(sessionRef, { participants: updatedParticipants });
 };
 
-// Fixed fetchUserSessions function
 export const fetchUserSessions = async (
   userId: string,
 ): Promise<FocusSession[]> => {
   const sessionsRef = collection(firestore, 'focusSessions');
 
-  // Query for solo sessions
   const soloQuery = query(sessionsRef, where('userId', '==', userId));
   const soloSnapshot = await getDocs(soloQuery);
   const soloSessions = soloSnapshot.docs.map(doc => doc.data() as FocusSession);
 
-  // Query for group sessions where user is a participant
-  const groupQuery = query(
-    sessionsRef,
-    where('sessionMode', '==', 'group'),
-    where('participants', 'array-contains-any', [{ userId }]),
-  );
-
   let groupSessions: FocusSession[] = [];
   try {
-    const groupSnapshot = await getDocs(groupQuery);
-    groupSessions = groupSnapshot.docs
-      .map(doc => doc.data() as FocusSession)
-      .filter(session => session.participants?.some(p => p.userId === userId));
-  } catch (error) {
-    console.log('Group session query failed, using alternative approach');
-
-    // Fallback: get all group sessions and filter client-side
     const allGroupQuery = query(
       sessionsRef,
       where('sessionMode', '==', 'group'),
@@ -507,6 +423,8 @@ export const fetchUserSessions = async (
     groupSessions = allGroupSnapshot.docs
       .map((doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => doc.data() as FocusSession)
       .filter((session: FocusSession) => session.participants?.some(p => p.userId === userId));
+  } catch (error) {
+    console.log('Group session query failed:', error);
   }
 
   return [...soloSessions, ...groupSessions];
@@ -523,13 +441,11 @@ export const aggregateSessionsByWeek = (
   const dailyCounts: Record<string, number> = {};
 
   sessions.forEach(session => {
-    // Convert Firestore Timestamp to JavaScript Date
     const sessionDate =
       session.createdAt instanceof Timestamp
         ? session.createdAt.toDate()
         : new Date(session.createdAt);
 
-    // Use local timezone for date string to avoid timezone issues
     const year = sessionDate.getFullYear();
     const month = String(sessionDate.getMonth() + 1).padStart(2, '0');
     const day = String(sessionDate.getDate()).padStart(2, '0');
@@ -538,8 +454,6 @@ export const aggregateSessionsByWeek = (
     dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
   });
 
-  console.log('Daily counts:', dailyCounts); // Debug log
-
   const data: number[][] = [];
   for (let w = 0; w < weeks; w++) {
     const week: number[] = [];
@@ -547,14 +461,12 @@ export const aggregateSessionsByWeek = (
       const day = new Date(startDate);
       day.setDate(startDate.getDate() + w * 7 + d);
 
-      // Use same date formatting as above
       const year = day.getFullYear();
       const month = String(day.getMonth() + 1).padStart(2, '0');
       const dayNum = String(day.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${dayNum}`;
 
       const count = dailyCounts[dateStr] || 0;
-      // Cap the count at 4 for heatmap visualization
       week.push(Math.min(count, 4));
     }
     data.push(week);
@@ -563,7 +475,6 @@ export const aggregateSessionsByWeek = (
   return data;
 };
 
-// start group session
 export const startGroupSession = async (sessionId: string): Promise<void> => {
   const sessionRef = doc(sessionsCollection, sessionId);
   await updateDoc(sessionRef, {
@@ -572,7 +483,6 @@ export const startGroupSession = async (sessionId: string): Promise<void> => {
   });
 };
 
-// abandon group session
 export const abandonGroupSession = async (
   sessionId: string,
   userId: string,
@@ -589,59 +499,42 @@ export const abandonGroupSession = async (
   const groupSettings = sessionData.groupSettings;
   if (!groupSettings) throw new Error('Group settings not found');
 
-  const updatedParticipants = sessionData.participants?.map(p =>
-    p.userId === userId
-      ? { ...p, status: 'abandoned' as const, abandonedAt: Timestamp.now() }
-      : p,
+  // Get all active participants
+  const allParticipants = sessionData.participants?.filter(
+    p => p.status === 'active' || p.status === 'accepted'
+  ) || [];
+
+  // Mark ALL participants as abandoned
+  const updatedParticipants = sessionData.participants?.map(p => ({
+    ...p,
+    status: 'abandoned' as const,
+    abandonedAt: Timestamp.now(),
+  }));
+
+  const allParticipantIds = allParticipants.map(p => p.userId);
+  
+  const consequences: GroupConsequences = {
+    quitterUserId: userId,
+    quitterUsername: participant.username,
+    penaltyApplied: true,
+    affectedParticipants: allParticipantIds,
+    consequenceReason: 'user_quit',
+  };
+
+  await applyAbandonmentPenalty(
+    null,
+    userId,
+    sessionData.sessionType,
+    sessionData.duration,
   );
 
-  let sessionUpdate: any = { participants: updatedParticipants };
+  await updateDoc(sessionRef, {
+    participants: updatedParticipants,
+    status: 'cancelled',
+    sessionStatus: 'completed',
+    endTime: Timestamp.now(),
+    consequences,
+  });
 
-  if (
-    groupSettings.requireAllToComplete &&
-    groupSettings.penaltyForQuitting.applyToAll
-  ) {
-    const affectedParticipants =
-      sessionData.participants
-        ?.filter(
-          p =>
-            p.userId !== userId &&
-            (p.status === 'active' || p.status === 'accepted'),
-        )
-        .map(p => p.userId) || [];
-
-    const consequences: GroupConsequences = {
-      quitterUserId: userId,
-      quitterUsername: participant.username,
-      penaltyApplied: true,
-      affectedParticipants,
-      consequenceReason: 'user_quit',
-    };
-
-    await applyGroupPenalties(
-      null,
-      [...affectedParticipants, userId],
-      userId,
-      sessionData.sessionType,
-      sessionData.duration,
-      groupSettings.penaltyForQuitting.deadStarsGained,
-    );
-
-    sessionUpdate = {
-      ...sessionUpdate,
-      status: 'cancelled',
-      sessionStatus: 'completed',
-      endTime: Timestamp.now(),
-      consequences,
-    };
-  } else {
-    await applyAbandonmentPenalty(
-      null,
-      userId,
-      sessionData.sessionType,
-      sessionData.duration,
-    );
-  }
-
-  await updateDoc(sessionRef, sessionUpdate);
+  console.log(`Session ${sessionId} cancelled by user ${userId}`);
 };

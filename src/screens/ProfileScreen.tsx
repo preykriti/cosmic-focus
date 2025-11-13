@@ -3,6 +3,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ScrollView,
+  RefreshControl,
   Dimensions,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
@@ -21,30 +23,40 @@ import {
 const { height } = Dimensions.get('window');
 
 export default function ProfileScreen({ navigation }: any) {
+  const [refreshing, setRefreshing] = useState(false);
   const dispatch = useAppDispatch();
   const user = useAppSelector(state => state.auth.user);
   const stars = user?.stars ? user.stars : 0;
   const streak = user?.streak ? user.streak : 0;
   const minutes = user?.totalFocusMinutes ? user.totalFocusMinutes : 0;
   const totalTaskDone = user?.totalTasksDone ? user.totalTasksDone : 0;
+  const deadStars = user?.deadStars ? user.deadStars : 0;
   const totalPomodoro = user?.totalPomodoros ? user.totalPomodoros : 0;
 
   const [heatmapData, setHeatmapData] = useState<number[][]>([]);
 
   const getColor = (value: number) => {
-    switch (value) {
-      case 0:
-        return colors.light.border;
-      case 1:
-        return '#E0E7FF';
-      case 2:
-        return '#A5B4FC';
-      case 3:
-        return '#6366F1';
-      case 4:
-        return '#4F46E5';
-      default:
-        return colors.light.border;
+    if (value === 0) return colors.light.border;
+    if (value >= 1 && value <= 5) return '#C7D2FE';
+    if (value >= 6 && value <= 10) return '#8B5CF6';
+    if (value >= 11 && value <= 15) return '#5B21B6';
+    if (value >= 16) return '#3B0CA3';
+    return colors.light.border;
+  };
+
+  const onRefresh = async () => {
+    if (!user?.id) return;
+
+    setRefreshing(true);
+    try {
+      console.log('Refreshing heatmap data...');
+      const sessions = await fetchUserSessions(user.id);
+      const data = aggregateSessionsByWeek(sessions, 18);
+      setHeatmapData(data);
+    } catch (error) {
+      console.error('Failed to refresh heatmap data:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -85,6 +97,7 @@ export default function ProfileScreen({ navigation }: any) {
 
     loadHeatmapData();
   }, [user]);
+
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
@@ -100,7 +113,19 @@ export default function ProfileScreen({ navigation }: any) {
   };
 
   return (
-    <View style={[globalStyles.container, styles.container]}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[colors.light.primary]}
+          progressBackgroundColor={colors.light.surface}
+        />
+      }
+    >
       {/* user info */}
       <View style={styles.avatarContainer}>
         <View style={styles.avatarCircle}>
@@ -141,18 +166,17 @@ export default function ProfileScreen({ navigation }: any) {
             <Text style={styles.statLabel}>Stars</Text>
           </View>
 
+          {/* 🔄 moved Dead Stars here */}
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
               <Ionicon
-                name="time-outline"
+                name="skull-outline"
                 size={20}
                 color={colors.light.warning}
               />
             </View>
-            <Text style={styles.statNumber}>
-              {convertMinutesToHour(minutes)}
-            </Text>
-            <Text style={styles.statLabel}>Focus Hours</Text>
+            <Text style={styles.statNumber}>{deadStars}</Text>
+            <Text style={styles.statLabel}>Dead Stars</Text>
           </View>
         </View>
       </View>
@@ -165,8 +189,10 @@ export default function ProfileScreen({ navigation }: any) {
         <Text style={styles.sectionTitle}>Progress Overview</Text>
         <View style={styles.statsRow}>
           <View style={styles.progressStat}>
-            <Text style={styles.progressNumber}>{totalTaskDone}</Text>
-            <Text style={styles.progressLabel}>Tasks Done</Text>
+            <Text style={styles.progressNumber}>
+              {convertMinutesToHour(minutes)}
+            </Text>
+            <Text style={styles.progressLabel}>Focus Hours</Text>
           </View>
           <View style={styles.progressStat}>
             <Text style={styles.progressNumber}>{totalPomodoro}</Text>
@@ -191,7 +217,7 @@ export default function ProfileScreen({ navigation }: any) {
           <Text style={styles.logoutText}>Logout</Text>
         </LinearGradient>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -199,14 +225,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.light.surface,
+  },
+  contentContainer: {
     paddingVertical: 24,
     paddingHorizontal: 16,
-    justifyContent: 'space-between',
-    height: height - 50,
+    paddingBottom: 55, 
   },
   avatarContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   avatarCircle: {
     width: 70,
@@ -234,7 +261,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light.card,
     borderRadius: 14,
     padding: 14,
-    marginBottom: 10,
+    marginBottom: 28,
     elevation: 2,
   },
   statsRow: {
@@ -295,7 +322,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   logoutButtonWrapper: {
-    marginBottom: 40,
+    marginTop: 16,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -316,6 +343,6 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: colors.light.border,
-    marginVertical: 12,
+    marginVertical: 13,
   },
 });

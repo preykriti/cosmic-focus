@@ -12,7 +12,7 @@ export const colors = {
     border: '#E2E8F0',
     success: '#10B981',
     warning: '#F59E0B',
-    error: '#EF4444',
+    error: '#dd5050ff',
     gradientStart: '#6366F1',
 
     gradientEnd: '#8B5CF6',

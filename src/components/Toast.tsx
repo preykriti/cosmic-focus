@@ -5,7 +5,7 @@ import { clearError, clearMessage } from '../store/slices/authSlice';
 
 const Toast = () => {
   const dispatch = useAppDispatch();
-  const { error, message } = useAppSelector((state) => state.auth);
+  const { error, message } = useAppSelector(state => state.auth);
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
@@ -13,13 +13,13 @@ const Toast = () => {
       Animated.sequence([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 200,
           useNativeDriver: true,
         }),
         Animated.delay(3000),
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 300,
+          duration: 200,
           useNativeDriver: true,
         }),
       ]).start(() => {
@@ -35,9 +35,9 @@ const Toast = () => {
     <Animated.View
       style={[
         styles.toast,
-        { 
+        {
           opacity: fadeAnim,
-          backgroundColor: error ? '#ad4338ff' : '#49c57dff',
+          backgroundColor: error ? '#ad4338ff' : '#6c80f3ff',
         },
       ]}
     >

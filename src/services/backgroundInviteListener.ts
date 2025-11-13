@@ -18,7 +18,6 @@ class BackgroundInviteListener {
 
   public startListening(userId: string) {
     if (this.currentUserId === userId && this.unsubscribe) {
-      console.log('🔄 Already listening for user:', userId);
       return;
     }
 
@@ -76,7 +75,7 @@ class BackgroundInviteListener {
       p => p.userId === this.currentUserId && p.status === 'invited'
     );
 
-    console.log('👤 Found user participant:', userParticipant);
+    console.log('Found user participant:', userParticipant);
 
     if (userParticipant) {
       const inviteKey = `${sessionId}-${this.currentUserId}`;

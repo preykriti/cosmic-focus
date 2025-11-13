@@ -6,13 +6,14 @@ import {
   View,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
-import { fetchTasks } from '../store/slices/taskSlice';
+import { fetchTasks, removeTask } from '../store/slices/taskSlice';
 import Ionicon from '@react-native-vector-icons/ionicons';
 import TaskModal from '../components/tasks/TaskModal';
 import FilterBar from '../components/tasks/FilterBar';
+import SwipeableTaskCard from '../components/tasks/SwipeableTaskCard';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import TaskCard from '../components/tasks/TaskCard';
 import { colors } from '../constants/colors';
 import { useNavigation } from '@react-navigation/core';
 
@@ -38,6 +39,11 @@ export default function TasksScreen() {
       autoStartNext: autoStart,
       isGroupSession: false,
     });
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (!user?.id) return;
+    dispatch(removeTask({ taskId, userId: user.id }));
   };
 
   useEffect(() => {
@@ -78,12 +84,13 @@ export default function TasksScreen() {
           data={filteredTasks}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <TaskCard
+            <SwipeableTaskCard
               task={item}
               onPress={() => {
                 console.log('card pressed');
               }}
               onStartPomodoro={handleStartPomodoro}
+              onDelete={handleDeleteTask}
             />
           )}
           contentContainerStyle={styles.listContainer}

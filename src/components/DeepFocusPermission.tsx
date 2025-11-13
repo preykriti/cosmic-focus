@@ -1,3 +1,4 @@
+import Ionicons from '@react-native-vector-icons/ionicons';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -11,8 +12,7 @@ import {
 
 const { DeepFocusModule } = NativeModules;
 
-const DeepFocusPermission = () => {
-  const [isDeepFocusEnabled, setIsDeepFocusEnabled] = useState(false);
+const DeepFocusPermission = ({ isDeepFocusEnabled, setIsDeepFocusEnabled }) => {
   const [hasUsageAccess, setHasUsageAccess] = useState(false);
   const [hasOverlayPermission, setHasOverlayPermission] = useState(false);
   const [hasBatteryOptimization, setHasBatteryOptimization] = useState(false);
@@ -134,8 +134,6 @@ const DeepFocusPermission = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Deep Focus Mode</Text>
-
       <View style={styles.switchContainer}>
         <Text style={styles.switchLabel}>Deep Focus Mode</Text>
         <Switch
@@ -151,9 +149,12 @@ const DeepFocusPermission = () => {
 
         {/* usage permission */}
         <View style={styles.permissionItem}>
-          <Text style={styles.permissionText}>
-            Usage Access: {hasUsageAccess ? 'Granted' : 'Denied'}
-          </Text>
+          <Text style={styles.permissionText}>Usage Access: </Text>
+          {hasUsageAccess ? (
+            <Ionicons name="checkmark-circle" size={20} color="green" />
+          ) : (
+            <Ionicons name="close-circle" size={20} color="red" />
+          )}
           {!hasUsageAccess && (
             <Text style={styles.permissionButton} onPress={requestUsageAccess}>
               Grant Permission
@@ -163,9 +164,12 @@ const DeepFocusPermission = () => {
 
         {/* overlay permission */}
         <View style={styles.permissionItem}>
-          <Text style={styles.permissionText}>
-            Display Over Apps: {hasOverlayPermission ? 'Granted' : 'Denied'}
-          </Text>
+          <Text style={styles.permissionText}>Display Over Apps: </Text>
+          {hasOverlayPermission ? (
+            <Ionicons name="checkmark-circle" size={20} color="green" />
+          ) : (
+            <Ionicons name="close-circle" size={20} color="red" />
+          )}
           {!hasOverlayPermission && (
             <Text
               style={styles.permissionButton}
@@ -176,11 +180,14 @@ const DeepFocusPermission = () => {
           )}
         </View>
 
-        {/* batter optimization */}
+        {/* Battery Optimization */}
         <View style={styles.permissionItem}>
-          <Text style={styles.permissionText}>
-            Battery Optimization: {hasBatteryOptimization ? 'Granted' : 'Denied'}
-          </Text>
+          <Text style={styles.permissionText}>Battery Optimization: </Text>
+          {hasBatteryOptimization ? (
+            <Ionicons name="checkmark-circle" size={20} color="green" />
+          ) : (
+            <Ionicons name="close-circle" size={20} color="red" />
+          )}
           {!hasBatteryOptimization && (
             <Text
               style={styles.permissionButton}
@@ -208,29 +215,30 @@ const DeepFocusPermission = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-    paddingTop: 60,
+    // flex: 1,
+    backgroundColor: 'white',
+    padding: 4,
+    paddingTop: 18,
+    overflow: 'hidden',
   },
   title: {
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 18,
   },
   switchContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'white',
-    padding: 20,
+    padding: 18,
     borderRadius: 10,
-    marginBottom: 30,
+    marginBottom: 18,
     elevation: 2,
   },
   switchLabel: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   permissionsContainer: {
@@ -265,7 +273,7 @@ const styles = StyleSheet.create({
   statusContainer: {
     backgroundColor: 'white',
     borderRadius: 10,
-    padding: 20,
+    padding: 18,
     elevation: 2,
   },
   statusText: {

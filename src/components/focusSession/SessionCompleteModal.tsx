@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { colors } from '../../constants/colors';
 
@@ -35,7 +29,7 @@ export default function SessionCompleteModal({
   onFinishSession,
 }: SessionCompleteModalProps) {
   const isLastCycle = currentCycle > totalCycles;
-  
+
   const getSessionTypeText = (type: string) => {
     switch (type) {
       case 'pomodoro':
@@ -67,11 +61,19 @@ export default function SessionCompleteModal({
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.modal}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Ionicons
+              name="close"
+              size={24}
+              color={colors.light.textSecondary}
+            />
+          </TouchableOpacity>
+
           <View style={styles.iconContainer}>
-            <Ionicons 
-              name="checkmark-circle" 
-              size={60} 
-              color={colors.light.success} 
+            <Ionicons
+              name="checkmark-circle"
+              size={60}
+              color={colors.light.success}
             />
           </View>
 
@@ -88,17 +90,20 @@ export default function SessionCompleteModal({
 
           <Text style={styles.progressText}>
             {/* Cycle {currentCycle} of {totalCycles} completed */}
-            Cycle {sessionType === 'pomodoro' ? currentCycle : currentCycle - 1}{' '}
+            Cycle {sessionType === 'pomodoro'
+              ? currentCycle
+              : currentCycle - 1}{' '}
             of {totalCycles} completed
           </Text>
 
           {!isLastCycle && nextSessionType && (
             <>
               <Text style={styles.nextSessionText}>
-                {autoStartNext 
-                  ? `${getNextSessionText(nextSessionType)} will start automatically`
-                  : `Ready for ${getNextSessionText(nextSessionType)}?`
-                }
+                {autoStartNext
+                  ? `${getNextSessionText(
+                      nextSessionType,
+                    )} will start automatically`
+                  : `Ready for ${getNextSessionText(nextSessionType)}?`}
               </Text>
 
               <View style={styles.buttonContainer}>
@@ -112,15 +117,6 @@ export default function SessionCompleteModal({
                     </Text>
                   </TouchableOpacity>
                 )}
-
-                <TouchableOpacity
-                  style={[styles.button, styles.secondaryButton]}
-                  onPress={onFinishSession}
-                >
-                  <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-                    Finish Session
-                  </Text>
-                </TouchableOpacity>
               </View>
             </>
           )}
@@ -130,21 +126,23 @@ export default function SessionCompleteModal({
               <Text style={styles.completionText}>
                 All cycles completed! Great job!
               </Text>
-              
+
               <TouchableOpacity
                 style={[styles.button, styles.primaryButton]}
                 onPress={onFinishSession}
               >
-                <Text style={styles.buttonText}>
-                  Finish Session
-                </Text>
+                <Text style={styles.buttonText}>Finish Session</Text>
               </TouchableOpacity>
             </>
           )}
 
-          {autoStartNext && !isLastCycle && (
-            <TouchableOpacity style={styles.cancelAutoButton} onPress={onClose}>
-              <Text style={styles.cancelAutoButtonText}>Cancel Auto-start</Text>
+          {/* Show close button if no other actions are available */}
+          {!nextSessionType && !isLastCycle && (
+            <TouchableOpacity
+              style={[styles.button, styles.primaryButton]}
+              onPress={onClose}
+            >
+              <Text style={styles.buttonText}>Close</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -168,6 +166,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     alignItems: 'center',
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 1,
+    padding: 4,
   },
   iconContainer: {
     marginBottom: 16,

@@ -23,10 +23,18 @@ import {
 } from '../store/slices/feedSlice';
 import CommentModal from '../components/feed/CommentModal';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { TabParamList } from '../types/navigation';
+import { MainStackParamList } from '../types/navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type FeedScreenNavigationProp = NativeStackNavigationProp<
+  MainStackParamList,
+  'Feed'
+>;
+type FeedScreenRouteProp = RouteProp<MainStackParamList, 'Feed'>;
+
 type FeedScreenProps = {
-  navigation: NavigationProp<TabParamList, 'Feed'>;
-  route: RouteProp<TabParamList, 'Feed'>;
+  navigation: FeedScreenNavigationProp;
+  route: FeedScreenRouteProp;
 };
 
 export default function FeedScreen({ navigation }: FeedScreenProps) {
@@ -58,19 +66,19 @@ export default function FeedScreen({ navigation }: FeedScreenProps) {
     }
   }, [dispatch, friendIds, initialLoad, userId]);
 
-  // const formatTimeAgo = (date: Date | null): string => {
-  //   if (!date) return 'Just now';
+  const formatTimeAgo = (date: Date | null): string => {
+    if (!date) return 'Just now';
 
-  //   const now = new Date();
-  //   const diffInHours = Math.floor(
-  //     (now.getTime() - date.getTime()) / (1000 * 60 * 60),
-  //   );
+    const now = new Date();
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
 
-  //   if (diffInHours < 1) return 'Just now';
-  //   if (diffInHours < 24) return `${diffInHours}h ago`;
-  //   const diffInDays = Math.floor(diffInHours / 24);
-  //   return `${diffInDays}d ago`;
-  // };
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
 
   const handleLike = (feed: Feed): void => {
     if (!userId) return;
@@ -196,16 +204,15 @@ export default function FeedScreen({ navigation }: FeedScreenProps) {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>
-              {item.username.charAt(0).toUpperCase()}
-            </Text>
+            <Ionicons name="person-outline" size={20} color="#fff" />
           </View>
+
           <View style={styles.headerInfo}>
             <Text style={styles.userName}>{item.username}</Text>
             {/* <Text style={styles.timestamp}>
               {formatTimeAgo(item.createdAt as Date)}
             </Text> */}
-            <Text style={styles.timestamp}>1 min ago</Text>
+            {/* <Text style={styles.timestamp}>1 min ago</Text> */}
           </View>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{getBadge(item.type)}</Text>
@@ -255,9 +262,7 @@ export default function FeedScreen({ navigation }: FeedScreenProps) {
             {commentsToShow.map(comment => (
               <View key={comment.id} style={styles.commentItem}>
                 <View style={styles.commentAvatarPlaceholder}>
-                  <Text style={styles.commentAvatarText}>
-                    {comment.username.charAt(0).toUpperCase()}
-                  </Text>
+                  <Ionicons name="person-outline" size={16} color="#fff" />
                 </View>
                 <View style={styles.commentContent}>
                   <Text style={styles.commentUserName}>{comment.username}</Text>
@@ -575,5 +580,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 4,
+  },
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  commentAvatarImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 10,
   },
 });
